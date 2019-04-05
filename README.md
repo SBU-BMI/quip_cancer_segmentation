@@ -15,4 +15,5 @@
  - Openslide 1.1.1 (https://openslide.org/api/python/)
  - sklearn (https://scikit-learn.org/stable/)
  - PIL (https://pillow.readthedocs.io/en/3.1.x/reference/Image.html)
+ 
  Details are in file brca_environ.txt

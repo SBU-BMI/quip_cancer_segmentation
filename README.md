@@ -1,11 +1,6 @@
 # quip_cancer_segmentation
 
-
-
-
-
-
-
+This repo is for training and testing brca cancer detection pipeline.
 
 # Dependencies
 
@@ -17,3 +12,10 @@
  - PIL (https://pillow.readthedocs.io/en/3.1.x/reference/Image.html)
  
  Details are in file brca_environ.txt
+
+# Running codes
+- Codes are in folder scripts, including training and testing
+- Need to setup folder path for training data, model. All parameters are found in conf/variables.sh
+- Training: bash train.sh
+-- 
+- Testing: bash svs_2_heatmap.sh

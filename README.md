@@ -5,7 +5,6 @@ This repo is for training and testing brca cancer detection pipeline.
 # Dependencies
 
  - [Pytorch 0.4.0](http://pytorch.org/)
- - Numpy
  - [OpenCV-Python](https://pypi.python.org/pypi/opencv-python)
  - [Openslide 1.1.1](https://openslide.org/api/python/)
  - [sklearn](https://scikit-learn.org/stable/)

@@ -17,5 +17,5 @@ This repo is for training and testing brca cancer detection pipeline.
 - Codes are in folder scripts, including training and testing
 - Need to setup folder path for training data, model. All parameters are found in conf/variables.sh
 - Training: bash train.sh
--- 
+## aa
 - Testing: bash svs_2_heatmap.sh

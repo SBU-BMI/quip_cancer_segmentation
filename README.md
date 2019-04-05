@@ -17,7 +17,7 @@ This repo is for training and testing brca cancer detection pipeline.
 - Need to setup folder path for training data, model. All parameters are found in conf/variables.sh
 ## Training:
 - Change DATA_PATH to your folder that contains all subfolders for training
-- Change DATA_LIST to your text file name that contains list of subfolders for training and validataion. 1st line is for validation, the rest is for training. Example of the list is tumor_training_list_toy.txt 
+- Change DATA_LIST to your text file name that contains list of subfolders for training and validataion. 1st line is for validation, the rest is for training. Example of the list is tumor_data_list_toy.txt 
 - Run "bash train.sh"
 - Log files are in data/log
 - Trained models are in "checkpoint"

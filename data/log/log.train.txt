@@ -1,0 +1,1380 @@
+Using GPU:  True
+/data01/shared/hanle/tumor_project/breast_cancer_40X/cancer_pos1/tumor_data_list_toy.txt
+DataLoader ....
+/home/hanle/anaconda3/envs/py3/lib/python3.6/site-packages/torchvision-0.2.0-py3.6.egg/torchvision/transforms/transforms.py:156: UserWarning: The use of the transforms.Scale transform is deprecated, please use transforms.Resize instead.
+training set loaded, pos: 1000; neg: 4000
+val set, pos: 1586; neg: 974
+
+
+====================train_cancer_cnn_Resnet_pretrained.py====================
+import argparse
+from torchvision import transforms
+import time
+import os, sys
+from time import strftime
+from sklearn.metrics import mean_squared_error, accuracy_score, hamming_loss, roc_curve, auc, f1_score
+from tumor_utils import *
+import copy
+from torch.utils.data import DataLoader, Dataset
+
+parser = argparse.ArgumentParser(description='PyTorch Digital Mammography Training')
+parser.add_argument('--lr', default=1e-2, type=float, help='learning rate')
+parser.add_argument('--net_type', default='RESNET_34_cancer_350px_lr_1e-2_decay_5_jitter_val6slides_harder_tcga', type=str, help='model')
+parser.add_argument('--color', default = 'none', type = str, help='color normalization option')
+parser.add_argument('--depth', default=34, choices=[18, 34, 50,101, 152], type=int, help='depth of model')
+parser.add_argument('--weight_decay', default=1e-4, type=float, help='weight decay')
+parser.add_argument('--finetune', '-f', action='store_true', help='Fine tune pretrained model')
+parser.add_argument('--trainer', default='adam', type=str, help='optimizer')
+parser.add_argument('--batch_size', default=256, type=int)
+parser.add_argument('--num_workers', default=8, type=int)
+parser.add_argument('--num_epochs', default=20, type=int, help='Number of epochs in training')
+parser.add_argument('--lr_decay_epoch', default=10, type = int)
+parser.add_argument('--max_lr_decay', default = 60, type = int)
+parser.add_argument('--check_after', default=1,
+                    type=int, help='check the network after check_after epoch')
+parser.add_argument('--train_from', default=1,
+                    choices=[0, 1, 2],
+                    type=int,
+                    help="training from beginning (1) or from the most recent ckpt (0)")
+parser.add_argument('--frozen_until', '-fu', type=int, default=20,
+                    help="freeze until --frozen_util block")
+parser.add_argument('--val_ratio', default=0.1, type=float,
+                    help="number of training samples per class")
+parser.add_argument('--note', type=str, default='none', help="note while running the code")
+parser.add_argument('--data', type=str, default='none', help="path to the folder containing all subfolders of training/testing data", required=False)
+parser.add_argument('--data_list', type=str, default='none', help="text file containing the training/testing folder", required=False)
+args = parser.parse_args()
+
+
+rand_seed = 26700
+if rand_seed is not None:
+    np.random.seed(rand_seed)
+    torch.manual_seed(rand_seed)
+    torch.cuda.manual_seed(rand_seed)
+
+use_gpu = torch.cuda.is_available()
+print('Using GPU: ', use_gpu)
+
+device = torch.device("cuda:0")
+
+classn = 1
+freq_print = 100     # print stats every {} batches
+
+training_data_path = '/data01/shared/hanle/tumor_project/breast_cancer_40X/cancer_pos1'
+dataset_list = os.path.join(training_data_path, 'tumor_data_list_toy.txt')
+
+training_data_path = args.data
+dataset_list = args.data_list
+dataset_list = os.path.join(training_data_path, dataset_list)
+
+print(dataset_list)
+
+###########
+print('DataLoader ....')
+
+def mean_std(type = 'none'):
+    if type == 'vahadane':
+        mean = [0.8372, 0.6853, 0.8400]
+        std = [0.1135, 0.1595, 0.0922]
+    elif type == 'macenko':
+        mean = [0.8196, 0.6938, 0.8131]
+        std = [0.1417, 0.1707, 0.1129]
+    elif type == 'reinhard':
+        mean = [0.8364, 0.6738, 0.8475]
+        std = [0.1315, 0.1559, 0.1084]
+    elif type == 'macenkoMatlab':
+        mean = [0.7805, 0.6230, 0.7068]
+        std = [0.1241, 0.1590, 0.1202]
+    else:
+        mean = [0.7238, 0.5716, 0.6779]
+        std = [0.1120, 0.1459, 0.1089]
+    return mean, std
+
+mean, std = mean_std(args.color)
+
+input_size = 224
+data_transforms = {
+    'train': transforms.Compose([
+        transforms.RandomRotation(22),
+        transforms.CenterCrop(350),
+        transforms.Scale(input_size),
+        transforms.RandomHorizontalFlip(),  # simple data augmentation
+        transforms.RandomVerticalFlip(),
+        transforms.ColorJitter(brightness=0.3, contrast=0.3, saturation=0.3, hue=0.1),
+        transforms.ToTensor(),
+        transforms.Normalize(mean, std)]),
+
+    'val': transforms.Compose([
+        transforms.CenterCrop(350),
+        transforms.Scale(input_size),
+        transforms.ToTensor(),
+        transforms.Normalize(mean, std)
+    ]),
+}
+
+img_trains, img_vals = load_imgs_files(classn, dataset_list = dataset_list, training_data_path = training_data_path, color = args.color)
+
+train_set = data_loader(img_trains, transform = data_transforms['train'])
+train_loader = DataLoader(train_set, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers, pin_memory=False)
+
+val_set = data_loader(img_vals, transform = data_transforms['val'])
+val_loader = DataLoader(val_set, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers, pin_memory=False)
+
+
+def val_fn_epoch(classn = 1, val_fn = None, crit = None, val_loader = None):
+    Pr = np.empty(shape = (20000, classn), dtype = np.int32)
+    Or = np.empty(shape = (20000, classn), dtype = np.float32)
+    Tr = np.empty(shape = (20000, classn), dtype = np.int32)
+
+    def softmax_np(x):
+        x = x - np.max(x, 1, keepdims=True)
+        x = np.exp(x) / (np.sum(np.exp(x), 1, keepdims=True))
+        return x
+
+    nline = 0
+    running_loss = 0.0
+    with torch.no_grad():
+        for ix, batch in enumerate(val_loader):
+            if (len(val_loader.dataset) - nline) < 5: continue
+            inputs, targets = batch
+            inputs = Variable(inputs.to(device))
+            targets = Variable(targets.to(device))
+            output = val_fn(inputs)
+            if type(output) == tuple:
+                output,_ = output
+            N = output.size(0)
+
+            loss = crit(output, targets)
+            running_loss += loss.item() * N
+
+            _, pred = torch.max(output.data, 1)
+
+
+            output = output.data.cpu().numpy()
+            pred = pred.data.cpu().numpy()
+            output = softmax_np(output)[:,1]
+
+            Pr[nline:nline+N] = pred.reshape(-1, 1)
+            Or[nline:nline+N] = output.reshape(-1, 1)
+            Tr[nline:nline+N] = targets.data.cpu().numpy().reshape(-1, 1)
+            nline += N
+
+    Pr = Pr[:nline]
+    Or = Or[:nline]
+    Tr = Tr[:nline]
+    val_ham = (1 - hamming_loss(Tr, Pr))
+    val_acc = accuracy_score(Tr, Pr)
+    f1 = f1_score(Tr, Pr, average='binary')
+    return val_ham, val_acc, f1, Pr, Or, Tr, running_loss/nline
+
+def confusion_matrix(Or, Tr, thres):
+    tpos = np.sum((Or>=thres) * (Tr==1))
+    tneg = np.sum((Or< thres) * (Tr==0))
+    fpos = np.sum((Or>=thres) * (Tr==0))
+    fneg = np.sum((Or< thres) * (Tr==1))
+    return tpos, tneg, fpos, fneg
+
+def auc_roc(Pr, Tr):
+    fpr, tpr, _ = roc_curve(Tr, Pr, pos_label=1.0)
+    return auc(fpr, tpr)
+
+
+def train_model(model, criterion = None, num_epochs=100, train_loader = train_loader, val_loader = val_loader):
+    best_auc = 0
+    best_epoch = 0
+    start_training = time.time()
+
+    for epoch in range(num_epochs):
+        start = time.time()
+
+        if epoch < 4: lr = args.lr
+        elif epoch < 8: lr = args.lr/2
+        elif epoch < 10: lr = args.lr/10
+        elif epoch < 15: lr = args.lr / 50
+        else: lr = args.lr/100
+
+        if epoch >= 1:
+            for param in model.parameters():
+                param.requires_grad = True
+
+
+        optimizer = optim.SGD(filter(lambda p: p.requires_grad, model.parameters()), lr=lr, momentum=0.9, weight_decay=args.weight_decay)
+
+        print('Epoch {}/{}'.format(epoch + 1, num_epochs))
+        print('lr: {:.6f}'.format(lr))
+        print('-' * 50)
+
+        for phase in ['train']:
+            if phase == 'train':
+                data_loader = train_loader
+                model.train(True)
+            else:
+                data_loader = val_loader
+                model.train(False)
+
+            running_loss = 0.0
+            running_corrects = 0
+            N_tot = 0
+            for ix, data in enumerate(data_loader):
+                if (len(data_loader.dataset) - N_tot) < 3: continue
+                inputs, labels = data
+                inputs = Variable(inputs.to(device))
+                labels = Variable(labels.to(device))
+
+                optimizer.zero_grad()
+                outputs = model(inputs)
+                if type(outputs) == tuple:  # for inception_v3 output
+                    outputs,_ = outputs
+
+                _, preds = torch.max(outputs.data, 1)
+                loss = criterion(outputs, labels)
+                if phase == 'train':
+                    loss.backward()
+                    optimizer.step()
+
+                N_tot += outputs.size(0)
+                running_loss += loss.item() * inputs.size(0)
+                running_corrects += torch.sum(preds == labels.data)
+
+                if (ix + 1) % freq_print == 0:
+                    print('| Epoch:[{}][{}/{}]\tTrain_Loss: {:.4f}\tAccuracy: {:.4f}\tTime: {:.2f} mins'.format(epoch + 1, ix + 1,
+                         len(data_loader.dataset)//args.batch_size,
+                         running_loss / N_tot, running_corrects.item() / N_tot, (time.time() - start)/60.0))
+
+                sys.stdout.flush()
+
+            ############ VALIDATION #############################################
+            if (epoch + 1) % args.check_after == 0:
+                model.eval()
+                start = time.time()
+                val_ham, val_acc, f1, Pr, Or, Tr, val_loss = val_fn_epoch(classn = 1, val_fn = model, crit = criterion, val_loader = val_loader)
+                tpos0, tneg0, fpos0, fneg0 = confusion_matrix(Or, Tr, 0.4)
+                tpos1, tneg1, fpos1, fneg1 = confusion_matrix(Or, Tr, 0.5)
+                tpos2, tneg2, fpos2, fneg2 = confusion_matrix(Or, Tr, 0.6)
+                val_auc = auc_roc(Or, Tr)
+                print("Epoch: {}\tVal_Loss: {:.4f}\tAccuracy: {:.4f}\tAUC: {:.4f}\tF1-score: {:.4f}\t{}/{}/{}/{}\t{}/{}/{}/{}\t{}/{}/{}/{}\t{}/{}\t{:.3f}mins".format(
+                    (epoch + 1), val_loss, val_acc, val_auc, f1,
+                    tpos0, tneg0, fpos0, fneg0,
+                    tpos1, tneg1, fpos1, fneg1,
+                    tpos2, tneg2, fpos2, fneg2,
+                    epoch + 1, num_epochs, (time.time() - start)/60.0))
+                start = time.time()
+
+                # deep copy the model
+                if f1 > best_auc and epoch > 2:
+                    print('Saving model')
+                    best_auc = f1
+                    best_epoch = epoch
+                    best_model = copy.deepcopy(model)
+                    state = {
+                        'model': best_model,
+                        'auc': best_auc,
+                        'args': args,
+                        'lr': lr,
+                        'saved_epoch': epoch,
+                    }
+                    if not os.path.isdir('checkpoint'):
+                        os.mkdir('checkpoint')
+                    save_point = './checkpoint/'
+                    if not os.path.isdir(save_point):
+                        os.mkdir(save_point)
+
+                    saved_model_fn = args.net_type + '_' + args.color + '_' + strftime('%m%d_%H%M')
+                    torch.save(state, save_point + saved_model_fn + '_' + str(best_auc) + '_' + str(epoch) + '.t7')
+                    print('=======================================================================')
+
+    time_elapsed = time.time() - start_training
+    print('Training complete in {:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
+    print('Best val Acc: {:4f} at epoch: {}'.format(best_auc, best_epoch))
+
+
+def main():
+    sys.setrecursionlimit(10000)
+
+    with open(os.path.basename(__file__)) as f:
+        codes = f.readlines()
+    print('\n\n' + '=' * 20 + os.path.basename(__file__) + '=' * 20)
+    for c in codes:
+        print(c[:-1])
+
+    with open('tumor_utils.py') as f:
+        codes = f.readlines()
+    print('\n\n' + '=' * 20 + 'tumor_utils.py' + '=' * 20)
+    for c in codes:
+        print(c[:-1])
+
+    with open('resnet.py') as f:
+        codes = f.readlines()
+    print('\n\n' + '=' * 20 + 'resnet.py' + '=' * 20)
+    for c in codes:
+        print(c[:-1])
+
+    model = models.resnet34(pretrained=True)
+
+    for param in model.parameters():
+        param.requires_grad = False
+
+
+    num_in = model.fc.in_features
+    model.fc = nn.Linear(num_in, 2)
+
+    model = model.to(device)
+
+    model = torch.nn.DataParallel(model, device_ids=[0,1])
+    cudnn.benchmark = True
+    print(model)
+
+    ##################
+    print('Start training ... ')
+    criterion = nn.CrossEntropyLoss().to(device)
+    train_model(model, criterion, num_epochs=args.num_epochs, train_loader=train_loader, val_loader=val_loader)
+
+if __name__ == "__main__":
+    main()
+
+
+====================tumor_utils.py====================
+import torch
+import numpy as np
+from torch.utils.data import DataLoader, Dataset
+import PIL.Image as Image
+import torch.optim as optim
+import torch.nn.parallel
+import torch.backends.cudnn as cudnn
+import torchvision.models as models
+from torch.autograd import Variable
+import os
+import sys
+import torch.nn as nn
+import cv2
+# from skimage.color import hed2rgb, rgb2hed
+
+APS = 400         # for resnet
+# APS = 380       # for pnasnet
+
+mean = [0.7238, 0.5716, 0.6779]
+std = [0.1120, 0.1459, 0.1089]
+
+mean = [0.5, 0.5, 0.5]
+std = [0.5, 0.5, 0.5]
+
+def load_data_folder(classn, folder, is_train, color = None, mask_path = ''): # only load the image filename and the labels
+    img_pos = []
+    img_neg = []
+    lines = [line.rstrip('\n') for line in open(folder + '/label.txt')]
+    no_pos = 0
+    no_neg = 0
+    for line in lines:
+        img = line.split()[0]
+        # change the label threshold to generate labels
+        if int(line.split()[1]) < -1: continue
+
+        lab = np.array([int(int(line.split()[1]) > 0)])       # class lymphocyte
+
+        # PC_058_0_1-17005-12805-2400-10X-0-macenko.png
+        if color != 'none':
+            img = img.split('.png')[0] + '_' + color + '.png'
+
+        # check is the segmentation mask available:
+        if mask_path != '':
+            seg_file = os.path.join(folder, img.split('.png')[0] + '_reinhard_segment.png')
+            if not os.path.exists(seg_file):
+                print('file not exist: ', seg_file)
+                continue
+
+        img_file = folder + '/' + img
+        if not os.path.isfile(img_file):
+            print('file not exist: ', img_file)
+            continue
+
+        if lab > 0:
+            img_pos.append((img_file, lab))
+        else:
+            img_neg.append((img_file, lab))
+    return img_pos, img_neg
+
+def load_data_split(classn, folders, is_train, color = None, mask_path = ''):
+    X_pos = []
+    X_neg = []
+    for folder in folders:
+        img_pos, img_neg = load_data_folder(classn, folder, is_train, color = color, mask_path = '')
+        X_pos += img_pos
+        X_neg += img_neg
+    return X_pos, X_neg
+
+def shuffle_data(data, N_limit = 1): # data is a list
+    rands = np.random.permutation(len(data))
+    out = []
+    count = 0
+    if N_limit == 1: N_limit = len(data)
+    for i in rands:
+        out.append(data[i])
+        count += 1
+        if count == N_limit:
+            break
+    return out
+
+def load_imgs_files(classn = 1, dataset_list = '', training_data_path = '', color = None, mask_path = ''):
+    img_test_pos = []
+    img_test_neg = []
+    img_train_pos = []
+    img_train_neg = []
+    lines = [line.rstrip('\n') for line in open(dataset_list)]
+    valid_i = 0
+    for line in lines:
+        split_folders = [training_data_path + "/" + s for s in line.split()]
+        if valid_i == 0:
+            # testing data
+            X_pos, X_neg = load_data_split(classn, split_folders, False, color = color, mask_path = '')
+            img_test_pos += X_pos
+            img_test_neg += X_neg
+        else:
+            # training dataX_pos
+            X_pos, X_neg = load_data_split(classn, split_folders, True, color = color, mask_path = '')
+            img_train_pos += X_pos
+            img_train_neg += X_neg
+        valid_i += 1
+
+    # ========== shuffle train_data, no need to shuffle test data ========
+    # N_pos = len(img_train_pos)
+    # N_neg = len(img_train_neg)
+    # if N_neg > N_pos:
+    #     img_train_neg = shuffle_data(img_train_neg, N_pos)
+
+#    img_train_pos = shuffle_data(img_train_pos, min(30000, len(img_train_pos)))
+#    img_train_neg = shuffle_data(img_train_neg, min(70000, len(img_train_neg)))
+
+    img_trains = img_train_pos + img_train_neg
+
+    #img_trains = shuffle_data(img_trains, len(img_trains))
+
+    # ==== testing data ====
+    img_vals = img_test_pos + img_test_neg
+    img_vals = shuffle_data(img_vals)
+
+    print("training set loaded, pos: {}; neg: {}".format(len(img_train_pos), len(img_train_neg)))
+    print("val set, pos: {}; neg: {}".format(len(img_test_pos), len(img_test_neg)))
+    return img_trains, img_vals
+
+def get_mean_and_std(dataset):
+    '''Compute the mean and std value of dataset.'''
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=True, num_workers=2)
+    mean = torch.zeros(3)
+    std = torch.zeros(3)
+    print('==> Computing mean and std..')
+    for inputs, targets in dataloader:
+        for i in range(3):
+            mean[i] += inputs[:,i,:,:].mean()
+            std[i] += inputs[:,i,:,:].std()
+    mean.div_(len(dataset))
+    std.div_(len(dataset))
+    return mean, std
+
+def get_mean_and_std_batch(dataset, bs = 4096):
+    pop_mean = []
+    pop_std0 = []
+    pop_std1 = []
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=bs, shuffle=True, num_workers=8)
+    for i, data in enumerate(dataloader, 0):
+        # shape (batch_size, 3, height, width)
+        print('{}/{}'.format(i, len(dataloader)))
+        sys.stdout.flush()
+        numpy_image, _ = data
+        numpy_image = numpy_image.numpy()
+
+        # shape (3,)
+        batch_mean = np.mean(numpy_image, axis=(0, 2, 3))
+        batch_std0 = np.std(numpy_image, axis=(0, 2, 3))
+        batch_std1 = np.std(numpy_image, axis=(0, 2, 3), ddof=1)
+        print(batch_mean, batch_std0, batch_std1)
+
+        pop_mean.append(batch_mean)
+        pop_std0.append(batch_std0)
+        pop_std1.append(batch_std1)
+
+    # shape (num_iterations, 3) -> (mean across 0th axis) -> shape (3,)
+    pop_mean = np.array(pop_mean).mean(axis=0)
+    pop_std0 = np.array(pop_std0).mean(axis=0)
+    pop_std1 = np.array(pop_std1).mean(axis=0)
+    return pop_mean, pop_std0, pop_std1
+
+
+class data_loader(Dataset):
+    """
+    Dataset to read image and label for training
+    """
+    def __init__(self, imgs, transform=None):
+        self.imgs = imgs
+        self.transform = transform
+    def __getitem__(self, index):
+        img = self.imgs[index]
+        lab = np.array([int(int(img[1]) > 0)])[0]
+        png = Image.open(img[0]).convert('RGB')     # ori: RGB, do not convert to numpy, keep it as PIL image to apply transform
+
+        #png = np.array(png)
+        #png = cv2.cvtColor(png, cv2.COLOR_RGB2YUV)     # for HASHI
+        #png = Image.fromarray(png.astype(np.uint8))
+
+
+        # if png.size[1] != 400:
+        #     png = png.resize((400, 400), Image.ANTIALIAS)
+
+        #png = np.array(png)
+        #if (png.shape[1] >= APS):
+        #    center = int(png.shape[1]/2)
+        #    png = png[center - APS//2:center + APS//2, center - APS//2:center + APS//2, :]
+        #png = Image.fromarray(png.astype('uint8'), 'RGB')
+
+        if self.transform:
+            png = self.transform(png)
+
+        ## visualize the augmentation...
+        #png2 = png.numpy().transpose()
+        #png2 = cv2.cvtColor(png2, cv2.COLOR_RGB2BGR)
+        #png2 = (png2 * std + mean) * 255
+        #png2 = png2.astype(np.uint8)
+        #cv2.imshow('img input: ', png2)
+        #cv2.waitKey(10)
+
+        return png, lab
+
+    def __len__(self):
+        return len(self.imgs)
+
+
+# class data_loader_4channels(Dataset):
+#     """
+#     Dataset to read image and label for training
+#     """
+#     def __init__(self, imgs, transform=None, mask_path = '', isValidation = False):
+#         self.imgs = imgs
+#         self.transform = transform
+#         self.mask_path = mask_path
+#         self.isValidation = isValidation
+#     def __getitem__(self, index):
+#         img = self.imgs[index]
+#         lab = np.array([int(int(img[1]) > 0)])[0]
+#         png = Image.open(img[0])     # size: wxhx3 ori: RGB, do not convert to numpy, keep it as PIL image to apply transform
+#
+#         # seg_file = os.path.join(self.mask_path, img[0].split('/')[-1].split('.png')[0] + '_reinhard_segmenr.png')
+#         seg_file = img[0].split('.png')[0] + '_reinhard_segment.png'
+#         seg = Image.open(seg_file)
+#
+#         png = png.resize((256, 256), Image.ANTIALIAS).convert('RGB')        # resize desized size
+#         seg = seg.resize((256, 256), Image.ANTIALIAS).convert('L')
+#
+#         png = np.array(png).transpose()
+#         seg = np.array(seg).transpose()
+#
+#         # seg_t = seg.copy()
+#         # seg[seg_t < 100] = 0
+#         # seg[seg_t >= 100] = 255
+#
+#         seg = np.expand_dims(seg, axis=0)
+#         png, seg = data_aug_img_mask(png, seg, deterministic = self.isValidation)
+#
+#         # cv2.imshow(img[0].split('/')[-1].split('.png')[0], seg_t)
+#         # cv2.waitKey()
+#
+#         png = np.concatenate((png, seg), axis = 0)
+#
+#         return png, lab
+#
+#     def __len__(self):
+#         return len(self.imgs)
+#
+#
+# class data_loader_data_aug(Dataset):
+#     """
+#     Dataset to read image and label for training
+#     """
+#     def __init__(self, imgs, transform=None, mask_path = '', isValidation = False):
+#         self.imgs = imgs
+#         self.transform = transform
+#         self.mask_path = mask_path
+#         self.isValidation = isValidation
+#     def __getitem__(self, index):
+#         img = self.imgs[index]
+#         lab = np.array([int(int(img[1]) > 0)])[0]
+#         png = Image.open(img[0])     # size: wxhx3 ori: RGB, do not convert to numpy, keep it as PIL image to apply transform
+#
+#         png = png.resize((256, 256), Image.ANTIALIAS).convert('RGB')        # resize desized size
+#         png = np.array(png).transpose()
+#         png = data_aug_img(png, deterministic=self.isValidation)
+#
+#         return png, lab
+#
+#     def __len__(self):
+#         return len(self.imgs)
+
+
+class data_loader_visualize(Dataset):
+    """
+    Dataset to read image and label for training
+    """
+    def __init__(self, imgs, transform=None):
+        self.imgs = imgs
+        self.transform = transform
+    def __getitem__(self, index):
+        img = self.imgs[index]
+        lab = np.array([int(int(img[1]) > 0)])[0]
+        png = Image.open(img[0]).convert('RGB')     # ori: RGB, do not convert to numpy, keep it as PIL image to apply transform
+
+        # if png.size[1] != 400:
+        #     png = png.resize((400, 400), Image.ANTIALIAS)
+
+        #png = np.array(png)
+        #if (png.shape[1] >= APS):
+        #    center = int(png.shape[1]/2)
+        #    png = png[center - APS//2:center + APS//2, center - APS//2:center + APS//2, :]
+        #png = Image.fromarray(png.astype('uint8'), 'RGB')
+
+        if self.transform:
+            png = self.transform(png)
+
+        ## visualize the augmentation...
+        #png2 = png.numpy().transpose()
+        #png2 = cv2.cvtColor(png2, cv2.COLOR_RGB2BGR)
+        #png2 = (png2 * std + mean) * 255
+        #png2 = png2.astype(np.uint8)
+        #cv2.imshow('img input: ', png2)
+        #cv2.waitKey(10)
+
+        return png, lab, img[0]
+
+    def __len__(self):
+        return len(self.imgs)
+
+class data_loader_noisy(Dataset):
+    """
+    Dataset to read image and label for training noisy labels dataset
+    """
+    def __init__(self, imgs, args, transform=None):
+        self.imgs = imgs
+        self.transform = transform
+        self.labels = np.zeros(len(self.imgs), dtype=np.int32)
+        self.soft_labels = np.zeros((len(self.imgs), 2), dtype=np.float32)
+        self.prediction = np.zeros((len(self.imgs), args.num_epochs, 2), dtype=np.float32)
+        self.labels_ori = np.zeros(len(self.imgs), dtype=np.int32)
+        self.count = 0
+        self.args = args
+
+        for i, data in enumerate(self.imgs):
+            img, label = data
+            self.labels[i] = np.array([int(int(label) > 0)])[0]
+            self.labels_ori[i] = self.labels[i]
+            self.soft_labels[i][self.labels[i]] = 1.
+
+    def __getitem__(self, index):
+        img = self.imgs[index]
+
+        png = Image.open(img[0]).convert('RGB')     # do not convert to numpy, keep it as PIL image to apply transform
+
+        # png = np.array(png)
+        # if (png.shape[1] >= APS):
+        #     center = int(png.shape[1]/2)
+        #     png = png[center - APS//2:center + APS//2, center - APS//2:center + APS//2, :]
+        # png = Image.fromarray(png.astype('uint8'), 'RGB')
+
+        if self.transform:
+            png = self.transform(png)
+
+        ## visualize the augmentation...
+        # png = png.numpy().transpose()
+        # png = (png * sigma + mu) * 255
+        # png = png.astype(np.uint8)
+        # print('size of png: ', png.shape)
+        # cv2.imshow('img input: ', png)
+        # cv2.waitKey(5000)
+
+        return png, self.labels[index], self.soft_labels[index], index
+
+    def __len__(self):
+        return len(self.imgs)
+
+    def label_update(self, results):
+        # While updating the noisy label y_i by the probability s,
+        # we used the average output probability of the network of the past 5 epochs as s.
+        # idx = (self.count - 1) % self.prediction.shape[1]
+        self.prediction[:, self.count] = results
+        self.count += 1
+
+        if self.count >= self.args.begin and self.count <= self.args.stop:
+            self.soft_labels = self.prediction[:, 0:self.count].mean(axis=1)
+            self.labels = np.argmax(self.soft_labels, axis=1).astype(np.int32)
+
+        if self.count == self.args.stop:
+            if not (os.path.isdir(self.args.out)): os.system('mkdir ' + self.args.out)
+            np.save('{}/labels_last.npy'.format(self.args.out), self.labels)
+            np.save('{}/soft_labels_last.npy'.format(self.args.out), self.soft_labels)
+
+# def data_aug_img(img, deterministic=False):
+#     # crop
+#     APS = 256
+#     PS = 224
+#     MARGIN = 0
+#     icut = APS - PS;
+#     jcut = APS - PS;
+#     if deterministic:
+#         ioff = int(icut // 2);
+#         joff = int(jcut // 2);
+#     else:
+#         ioff = np.random.randint(MARGIN, icut + 1 - MARGIN);
+#         joff = np.random.randint(MARGIN, jcut + 1 - MARGIN);
+#     img = img[:, ioff : ioff+PS, joff : joff+PS];
+#
+#     # adjust color
+#     if not deterministic:
+#         adj_add = np.array([[[0.07, 0.07, 0.007]]], dtype=np.float32);
+#         img = np.clip(hed2rgb( \
+#                 rgb2hed(img.transpose((2, 1, 0)) / 255.0) + np.random.uniform(-1.0, 1.0, (1, 1, 3))*adj_add \
+#               ).transpose((2, 1, 0))*255.0, 0.0, 255.0);
+#
+#     if not deterministic:
+#         adj_range = 0.05;
+#         adj_add = 3;
+#         rgb_mean = np.mean(img, axis=(1,2), keepdims=True).astype(np.float32);
+#         adj_magn = np.random.uniform(1 - adj_range, 1 + adj_range, (3, 1, 1)).astype(np.float32);
+#         img = np.clip((img-rgb_mean)*adj_magn + rgb_mean + np.random.uniform(-1.0, 1.0, (3, 1, 1))*adj_add, 0.0, 255.0);
+#
+#     # mirror and flip
+#     if not deterministic:
+#         if np.random.rand(1)[0] < 0.5:
+#             img = img[:, ::-1, :];
+#         if np.random.rand(1)[0] < 0.5:
+#             img = img[:, :, ::-1];
+#
+#     # transpose
+#     if not deterministic:
+#         if np.random.rand(1)[0] < 0.5:
+#             img = img.transpose((0, 2, 1))
+#
+#     img = img/255.0
+#
+#     return img
+#
+# def data_aug_img_mask(img, msk, deterministic=False):
+#     # crop
+#     APS = 256
+#     PS = 224
+#     MARGIN = 0
+#     icut = APS - PS;
+#     jcut = APS - PS;
+#     if deterministic:
+#         ioff = int(icut // 2);
+#         joff = int(jcut // 2);
+#     else:
+#         ioff = np.random.randint(MARGIN, icut + 1 - MARGIN);
+#         joff = np.random.randint(MARGIN, jcut + 1 - MARGIN);
+#     img = img[:, ioff : ioff+PS, joff : joff+PS];
+#     msk = msk[:, ioff : ioff+PS, joff : joff+PS];
+#
+#     # adjust color
+#     if not deterministic:
+#         adj_add = np.array([[[0.07, 0.07, 0.007]]], dtype=np.float32);
+#         img = np.clip(hed2rgb( \
+#                 rgb2hed(img.transpose((2, 1, 0)) / 255.0) + np.random.uniform(-1.0, 1.0, (1, 1, 3))*adj_add \
+#               ).transpose((2, 1, 0))*255.0, 0.0, 255.0);
+#
+#     if not deterministic:
+#         adj_range = 0.05;
+#         adj_add = 3;
+#         rgb_mean = np.mean(img, axis=(1,2), keepdims=True).astype(np.float32);
+#         adj_magn = np.random.uniform(1 - adj_range, 1 + adj_range, (3, 1, 1)).astype(np.float32);
+#         img = np.clip((img-rgb_mean)*adj_magn + rgb_mean + np.random.uniform(-1.0, 1.0, (3, 1, 1))*adj_add, 0.0, 255.0);
+#
+#     # mirror and flip
+#     if not deterministic:
+#         if np.random.rand(1)[0] < 0.5:
+#             img = img[:, ::-1, :];
+#             msk = msk[:, ::-1, :];
+#         if np.random.rand(1)[0] < 0.5:
+#             img = img[:, :, ::-1];
+#             msk = msk[:, :, ::-1];
+#
+#     # transpose
+#     if not deterministic:
+#         if np.random.rand(1)[0] < 0.5:
+#             img = img.transpose((0, 2, 1))
+#             msk = msk.transpose((0, 2, 1))
+#
+#     img = img/255.0
+#     msk = msk/255.0
+#
+#     return img, msk
+
+def parallelize_model(model):
+    if torch.cuda.is_available():
+        model = model.cuda()
+        # model = torch.nn.DataParallel(model, device_ids=range(torch.cuda.device_count()))
+        model = torch.nn.DataParallel(model, device_ids=[0, 1])
+        cudnn.benchmark = True
+    return model
+
+def unparallelize_model(model):
+    try:
+        while 1:
+            # to avoid nested dataparallel problem
+            model = model.module
+    except AttributeError:
+        pass
+    return model
+
+def net_frozen(args, model, init_lr, frozen_layer):
+    print('********************************************************')
+    model.frozen_until(frozen_layer)
+    if args.trainer.lower() == 'adam':
+        optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()),
+                lr=init_lr, weight_decay=args.weight_decay)
+    elif args.trainer.lower() == 'sgd':
+        optimizer = optim.SGD(filter(lambda p: p.requires_grad, model.parameters()),
+                lr=init_lr,  weight_decay=args.weight_decay)
+    print('********************************************************')
+    return model, optimizer
+
+def cvt_to_gpu(X):
+    return Variable(X.cuda()) if torch.cuda.is_available() \
+    else Variable(X)
+
+class HASHI(nn.Module):
+    def __init__(self):
+        super(HASHI, self).__init__()
+        self.conv1 = nn.Conv2d(3, 256, kernel_size=8, stride=1, padding=0, bias=False)      # out 256x94x94
+        self.relu = nn.ReLU(inplace=True)
+        self.L2pool = nn.LPPool2d(2, 2, stride=2)        # out 256x47x47
+        self.fc = nn.Linear(256*47*47, 2)
+
+        #for m in self.modules():
+        #    if isinstance(m, nn.Conv2d):
+        #       nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+        #    elif isinstance(m, nn.BatchNorm2d):
+        #        nn.init.constant_(m.weight, 1)
+        #        nn.init.constant_(m.bias, 0)
+
+    def forward(self, x):
+        x = self.conv1(x)
+        x = self.relu(x)
+        x = self.L2pool(x)
+        x = x.view(x.size(0), -1)
+        x = self.fc(x)
+        return x
+
+def weights_normal_init(model, dev=0.01):
+    if isinstance(model, list):
+        for m in model:
+            weights_normal_init(m, dev)
+    else:
+        for m in model.modules():
+            if isinstance(m, nn.Conv2d):
+                m.weight.data.normal_(0.0, dev)
+                if m.bias is not None:
+                    m.bias.data.fill_(0.0)
+            elif isinstance(m, nn.Linear):
+                m.weight.data.normal_(0.0, dev)
+
+
+====================resnet.py====================
+import torch.nn as nn
+import torch.utils.model_zoo as model_zoo
+import torch
+
+
+__all__ = ['ResNet', 'resnet18', 'resnet34', 'resnet50', 'resnet101',
+           'resnet152']
+
+
+model_urls = {
+    'resnet18': 'https://download.pytorch.org/models/resnet18-5c106cde.pth',
+    'resnet34': 'https://download.pytorch.org/models/resnet34-333f7ec4.pth',
+    'resnet50': 'https://download.pytorch.org/models/resnet50-19c8e357.pth',
+    'resnet101': 'https://download.pytorch.org/models/resnet101-5d3b4d8f.pth',
+    'resnet152': 'https://download.pytorch.org/models/resnet152-b121ed2d.pth',
+}
+
+
+def conv3x3(in_planes, out_planes, stride=1):
+    """3x3 convolution with padding"""
+    return nn.Conv2d(in_planes, out_planes, kernel_size=3, stride=stride,
+                     padding=1, bias=False)
+
+
+def conv1x1(in_planes, out_planes, stride=1):
+    """1x1 convolution"""
+    return nn.Conv2d(in_planes, out_planes, kernel_size=1, stride=stride, bias=False)
+
+
+class BasicBlock(nn.Module):
+    expansion = 1
+
+    def __init__(self, inplanes, planes, stride=1, downsample=None):
+        super(BasicBlock, self).__init__()
+        self.conv1 = conv3x3(inplanes, planes, stride)
+        self.bn1 = nn.BatchNorm2d(planes)
+        self.relu = nn.ReLU(inplace=True)
+        self.conv2 = conv3x3(planes, planes)
+        self.bn2 = nn.BatchNorm2d(planes)
+        self.downsample = downsample
+        self.stride = stride
+
+    def forward(self, x):
+        residual = x
+
+        out = self.conv1(x)
+        out = self.bn1(out)
+        out = self.relu(out)
+
+        out = self.conv2(out)
+        out = self.bn2(out)
+
+        if self.downsample is not None:
+            residual = self.downsample(x)
+
+        out += residual
+        out = self.relu(out)
+
+        return out
+
+
+class Bottleneck(nn.Module):
+    expansion = 4
+
+    def __init__(self, inplanes, planes, stride=1, downsample=None):
+        super(Bottleneck, self).__init__()
+        self.conv1 = conv1x1(inplanes, planes)
+        self.bn1 = nn.BatchNorm2d(planes)
+        self.conv2 = conv3x3(planes, planes, stride)
+        self.bn2 = nn.BatchNorm2d(planes)
+        self.conv3 = conv1x1(planes, planes * self.expansion)
+        self.bn3 = nn.BatchNorm2d(planes * self.expansion)
+        self.relu = nn.ReLU(inplace=True)
+        self.downsample = downsample
+        self.stride = stride
+
+    def forward(self, x):
+        residual = x
+
+        out = self.conv1(x)
+        out = self.bn1(out)
+        out = self.relu(out)
+
+        out = self.conv2(out)
+        out = self.bn2(out)
+        out = self.relu(out)
+
+        out = self.conv3(out)
+        out = self.bn3(out)
+
+        if self.downsample is not None:
+            residual = self.downsample(x)
+
+        out += residual
+        out = self.relu(out)
+
+        return out
+
+
+class ResNet(nn.Module):
+
+    def __init__(self, block, layers, num_classes=2):
+        self.inplanes = 64
+        super(ResNet, self).__init__()
+        self.conv1 = nn.Conv2d(3, 8, kernel_size=3, stride=2, padding=1, bias=False)
+        self.conv2 = nn.Conv2d(3, 16, kernel_size=5, stride=2, padding=2, bias=False)
+        self.conv3 = nn.Conv2d(3, 32, kernel_size=7, stride=2, padding=3, bias=False)
+        self.conv4 = nn.Conv2d(3, 8, kernel_size=9, stride=2, padding=4, bias=False)
+
+        self.bn1 = nn.BatchNorm2d(64)
+        self.relu = nn.ReLU(inplace=True)
+        self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+        self.layer1 = self._make_layer(block, 64, layers[0])
+        self.layer2 = self._make_layer(block, 128, layers[1], stride=2)
+        self.layer3 = self._make_layer(block, 256, layers[2], stride=2)
+        self.layer4 = self._make_layer(block, 512, layers[3], stride=2)
+        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        self.fc = nn.Linear(512 * block.expansion, num_classes)
+
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+            elif isinstance(m, nn.BatchNorm2d):
+                nn.init.constant_(m.weight, 1)
+                nn.init.constant_(m.bias, 0)
+
+    def _make_layer(self, block, planes, blocks, stride=1):
+        downsample = None
+        if stride != 1 or self.inplanes != planes * block.expansion:
+            downsample = nn.Sequential(
+                conv1x1(self.inplanes, planes * block.expansion, stride),
+                nn.BatchNorm2d(planes * block.expansion),
+            )
+
+        layers = []
+        layers.append(block(self.inplanes, planes, stride, downsample))
+        self.inplanes = planes * block.expansion
+        for _ in range(1, blocks):
+            layers.append(block(self.inplanes, planes))
+
+        return nn.Sequential(*layers)
+
+    def forward(self, x):
+        x = torch.cat((self.conv1(x), self.conv2(x), self.conv3(x), self.conv4(x)), 1)
+        x = self.bn1(x)
+        x = self.relu(x)
+        x = self.maxpool(x)
+
+        x = self.layer1(x)
+        x = self.layer2(x)
+        x = self.layer3(x)
+        x = self.layer4(x)
+
+        x = self.avgpool(x)
+        x = x.view(x.size(0), -1)
+        x = self.fc(x)
+
+        return x
+
+
+class ResNet_4(nn.Module):
+
+    def __init__(self, block, layers, num_classes=2):
+        self.inplanes = 64
+        super(ResNet_4, self).__init__()
+        self.conv1 = nn.Conv2d(4, 64, kernel_size=7, stride=2, padding=3, bias=False)
+        self.bn1 = nn.BatchNorm2d(64)
+        self.relu = nn.ReLU(inplace=True)
+        self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+        self.layer1 = self._make_layer(block, 64, layers[0])
+        self.layer2 = self._make_layer(block, 128, layers[1], stride=2)
+        self.layer3 = self._make_layer(block, 256, layers[2], stride=2)
+        self.layer4 = self._make_layer(block, 512, layers[3], stride=2)
+        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        self.fc = nn.Linear(512 * block.expansion, num_classes)
+
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+            elif isinstance(m, nn.BatchNorm2d):
+                nn.init.constant_(m.weight, 1)
+                nn.init.constant_(m.bias, 0)
+
+    def _make_layer(self, block, planes, blocks, stride=1):
+        downsample = None
+        if stride != 1 or self.inplanes != planes * block.expansion:
+            downsample = nn.Sequential(
+                conv1x1(self.inplanes, planes * block.expansion, stride),
+                nn.BatchNorm2d(planes * block.expansion),
+            )
+
+        layers = []
+        layers.append(block(self.inplanes, planes, stride, downsample))
+        self.inplanes = planes * block.expansion
+        for _ in range(1, blocks):
+            layers.append(block(self.inplanes, planes))
+
+        return nn.Sequential(*layers)
+
+    def forward(self, x):
+        x = self.conv1(x)
+        x = self.bn1(x)
+        x = self.relu(x)
+        x = self.maxpool(x)
+
+        x = self.layer1(x)
+        x = self.layer2(x)
+        x = self.layer3(x)
+        x = self.layer4(x)
+
+        x = self.avgpool(x)
+        x = x.view(x.size(0), -1)
+        x = self.fc(x)
+
+        return x
+
+
+def resnet18(pretrained=False, **kwargs):
+    """Constructs a ResNet-18 model.
+    Args:
+        pretrained (bool): If True, returns a model pre-trained on ImageNet
+    """
+    model = ResNet(BasicBlock, [2, 2, 2, 2], **kwargs)
+    if pretrained:
+        model.load_state_dict(model_zoo.load_url(model_urls['resnet18']))
+    return model
+
+
+def resnet34(pretrained=False, **kwargs):
+    """Constructs a ResNet-34 model.
+    Args:
+        pretrained (bool): If True, returns a model pre-trained on ImageNet
+    """
+    model = ResNet(BasicBlock, [3, 4, 6, 3], **kwargs)
+    if pretrained:
+        model.load_state_dict(model_zoo.load_url(model_urls['resnet34']))
+    return model
+
+
+def resnet34_4(**kwargs):
+    model = ResNet_4(BasicBlock, [3, 4, 6, 3], **kwargs)
+    return model
+
+
+def resnet50(pretrained=False, **kwargs):
+    """Constructs a ResNet-50 model.
+    Args:
+        pretrained (bool): If True, returns a model pre-trained on ImageNet
+    """
+    model = ResNet(Bottleneck, [3, 4, 6, 3], **kwargs)
+    if pretrained:
+        model.load_state_dict(model_zoo.load_url(model_urls['resnet50']))
+    return model
+
+
+def resnet101(pretrained=False, **kwargs):
+    """Constructs a ResNet-101 model.
+    Args:
+        pretrained (bool): If True, returns a model pre-trained on ImageNet
+    """
+    model = ResNet(Bottleneck, [3, 4, 23, 3], **kwargs)
+    if pretrained:
+        model.load_state_dict(model_zoo.load_url(model_urls['resnet101']))
+    return model
+
+
+def resnet152(pretrained=False, **kwargs):
+    """Constructs a ResNet-152 model.
+    Args:
+        pretrained (bool): If True, returns a model pre-trained on ImageNet
+    """
+    model = ResNet(Bottleneck, [3, 8, 36, 3], **kwargs)
+    if pretrained:
+        model.load_state_dict(model_zoo.load_url(model_urls['resnet152']))
+    return mode
+DataParallel(
+  (module): ResNet(
+    (conv1): Conv2d(3, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
+    (bn1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (relu): ReLU(inplace)
+    (maxpool): MaxPool2d(kernel_size=3, stride=2, padding=1, dilation=1, ceil_mode=False)
+    (layer1): Sequential(
+      (0): BasicBlock(
+        (conv1): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace)
+        (conv2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+      (1): BasicBlock(
+        (conv1): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace)
+        (conv2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+      (2): BasicBlock(
+        (conv1): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace)
+        (conv2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+    )
+    (layer2): Sequential(
+      (0): BasicBlock(
+        (conv1): Conv2d(64, 128, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+        (bn1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace)
+        (conv2): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (downsample): Sequential(
+          (0): Conv2d(64, 128, kernel_size=(1, 1), stride=(2, 2), bias=False)
+          (1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+      )
+      (1): BasicBlock(
+        (conv1): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace)
+        (conv2): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+      (2): BasicBlock(
+        (conv1): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace)
+        (conv2): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+      (3): BasicBlock(
+        (conv1): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace)
+        (conv2): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+    )
+    (layer3): Sequential(
+      (0): BasicBlock(
+        (conv1): Conv2d(128, 256, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+        (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace)
+        (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (downsample): Sequential(
+          (0): Conv2d(128, 256, kernel_size=(1, 1), stride=(2, 2), bias=False)
+          (1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+      )
+      (1): BasicBlock(
+        (conv1): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace)
+        (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+      (2): BasicBlock(
+        (conv1): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace)
+        (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+      (3): BasicBlock(
+        (conv1): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace)
+        (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+      (4): BasicBlock(
+        (conv1): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace)
+        (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+      (5): BasicBlock(
+        (conv1): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace)
+        (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+    )
+    (layer4): Sequential(
+      (0): BasicBlock(
+        (conv1): Conv2d(256, 512, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+        (bn1): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace)
+        (conv2): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (downsample): Sequential(
+          (0): Conv2d(256, 512, kernel_size=(1, 1), stride=(2, 2), bias=False)
+          (1): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+      )
+      (1): BasicBlock(
+        (conv1): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn1): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace)
+        (conv2): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+      (2): BasicBlock(
+        (conv1): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn1): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace)
+        (conv2): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+    )
+    (avgpool): AvgPool2d(kernel_size=7, stride=1, padding=0)
+    (fc): Linear(in_features=512, out_features=2, bias=True)
+  )
+)
+Start training ... 
+Epoch 1/20
+lr: 0.010000
+--------------------------------------------------
+Epoch: 1	Val_Loss: 1.4980	Accuracy: 0.4266	AUC: 0.8433	F1-score: 0.1514	196/952/22/1390	131/961/13/1455	80/967/7/1506	1/20	0.189mins
+Epoch 2/20
+lr: 0.010000
+--------------------------------------------------
+Epoch: 2	Val_Loss: 1.5863	Accuracy: 0.4625	AUC: 0.9240	F1-score: 0.2373	293/968/6/1293	214/970/4/1372	130/973/1/1456	2/20	0.185mins
+Epoch 3/20
+lr: 0.010000
+--------------------------------------------------
+Epoch: 3	Val_Loss: 3.3857	Accuracy: 0.3809	AUC: 0.8869	F1-score: 0.0013	3/974/0/1583	1/974/0/1585	0/974/0/1586	3/20	0.184mins
+Epoch 4/20
+lr: 0.010000
+--------------------------------------------------
+Epoch: 4	Val_Loss: 2.5342	Accuracy: 0.3953	AUC: 0.9044	F1-score: 0.0468	67/974/0/1519	38/974/0/1548	18/974/0/1568	4/20	0.185mins
+Saving model
+=======================================================================
+Epoch 5/20
+lr: 0.005000
+--------------------------------------------------
+Epoch: 5	Val_Loss: 1.6452	Accuracy: 0.4598	AUC: 0.9225	F1-score: 0.2269	278/972/2/1308	203/974/0/1383	138/974/0/1448	5/20	0.186mins
+Saving model
+=======================================================================
+Epoch 6/20
+lr: 0.005000
+--------------------------------------------------
+Epoch: 6	Val_Loss: 1.9588	Accuracy: 0.4395	AUC: 0.9052	F1-score: 0.1739	218/974/0/1368	151/974/0/1435	99/974/0/1487	6/20	0.183mins
+Epoch 7/20
+lr: 0.005000
+--------------------------------------------------
+Epoch: 7	Val_Loss: 2.4057	Accuracy: 0.4172	AUC: 0.8974	F1-score: 0.1119	138/974/0/1448	94/974/0/1492	64/974/0/1522	7/20	0.184mins
+Epoch 8/20
+lr: 0.005000
+--------------------------------------------------
+Epoch: 8	Val_Loss: 2.6217	Accuracy: 0.4094	AUC: 0.8939	F1-score: 0.0892	106/974/0/1480	74/974/0/1512	46/974/0/1540	8/20	0.184mins
+Epoch 9/20
+lr: 0.001000
+--------------------------------------------------
+Epoch: 9	Val_Loss: 2.5241	Accuracy: 0.4160	AUC: 0.8926	F1-score: 0.1085	124/974/0/1462	91/974/0/1495	54/974/0/1532	9/20	0.182mins
+Epoch 10/20
+lr: 0.001000
+--------------------------------------------------
+Epoch: 10	Val_Loss: 2.1036	Accuracy: 0.4453	AUC: 0.9038	F1-score: 0.1895	233/973/1/1353	166/974/0/1420	118/974/0/1468	10/20	0.183mins
+Epoch 11/20
+lr: 0.000200
+--------------------------------------------------
+Epoch: 11	Val_Loss: 2.2069	Accuracy: 0.4379	AUC: 0.8978	F1-score: 0.1696	205/973/1/1381	147/974/0/1439	110/974/0/1476	11/20	0.183mins
+Epoch 12/20
+lr: 0.000200
+--------------------------------------------------
+Epoch: 12	Val_Loss: 2.3339	Accuracy: 0.4266	AUC: 0.8991	F1-score: 0.1385	165/974/0/1421	118/974/0/1468	80/974/0/1506	12/20	0.183mins
+Epoch 13/20
+lr: 0.000200
+--------------------------------------------------
+Epoch: 13	Val_Loss: 2.3727	Accuracy: 0.4234	AUC: 0.8992	F1-score: 0.1297	151/974/0/1435	110/974/0/1476	70/974/0/1516	13/20	0.182mins
+Epoch 14/20
+lr: 0.000200
+--------------------------------------------------
+Epoch: 14	Val_Loss: 2.2518	Accuracy: 0.4320	AUC: 0.8982	F1-score: 0.1537	193/973/1/1393	132/974/0/1454	93/974/0/1493	14/20	0.183mins
+Epoch 15/20
+lr: 0.000200
+--------------------------------------------------
+Epoch: 15	Val_Loss: 2.3264	Accuracy: 0.4273	AUC: 0.8984	F1-score: 0.1407	162/973/1/1424	120/974/0/1466	79/974/0/1507	15/20	0.182mins
+Epoch 16/20
+lr: 0.000100
+--------------------------------------------------
+Epoch: 16	Val_Loss: 2.2370	Accuracy: 0.4348	AUC: 0.9000	F1-score: 0.1612	200/973/1/1386	139/974/0/1447	102/974/0/1484	16/20	0.183mins
+Epoch 17/20
+lr: 0.000100
+--------------------------------------------------
+Epoch: 17	Val_Loss: 2.4614	Accuracy: 0.4211	AUC: 0.9006	F1-score: 0.1231	142/974/0/1444	104/974/0/1482	60/974/0/1526	17/20	0.187mins
+Epoch 18/20
+lr: 0.000100
+--------------------------------------------------
+Epoch: 18	Val_Loss: 2.4201	Accuracy: 0.4211	AUC: 0.8958	F1-score: 0.1231	142/974/0/1444	104/974/0/1482	66/974/0/1520	18/20	0.186mins
+Epoch 19/20
+lr: 0.000100
+--------------------------------------------------
+Epoch: 19	Val_Loss: 2.1557	Accuracy: 0.4387	AUC: 0.8987	F1-score: 0.1718	219/973/1/1367	149/974/0/1437	112/974/0/1474	19/20	0.182mins
+Epoch 20/20
+lr: 0.000100
+--------------------------------------------------
+Epoch: 20	Val_Loss: 2.1306	Accuracy: 0.4434	AUC: 0.9002	F1-score: 0.1843	223/973/1/1363	161/974/0/1425	114/974/0/1472	20/20	0.182mins
+Training complete in 15m 51s
+Best val Acc: 0.226942 at epoch: 4

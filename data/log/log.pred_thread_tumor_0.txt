@@ -1,0 +1,283 @@
+/data01/shared/hanle/tumor_project/train_tumor_classification/quip_cancer_segmentation/data/patches/17032555.svs//patch-level-lym.txt generating
+/home/hanle/anaconda3/envs/py3/lib/python3.6/site-packages/torchvision-0.2.0-py3.6.egg/torchvision/transforms/transforms.py:156: UserWarning: The use of the transforms.Scale transform is deprecated, please use transforms.Resize instead.
+start predicting...
+| Load pretrained at  /data01/shared/hanle/tumor_project/train_tumor_classification/quip_cancer_segmentation/data/models_cnn/RESNET_34_cancer_350px_lr_1e-2_decay_5_jitter_val6slides_harder_pretrained_cancer_tils_none_1117_1811_0.9157633018398808_9.t7...
+/home/hanle/anaconda3/envs/py3/lib/python3.6/site-packages/torch/serialization.py:367: SourceChangeWarning: source code of class 'torch.nn.modules.conv.Conv2d' has changed. you can retrieve the original source code by accessing the object's source attribute or set `torch.nn.Module.dump_patches = True` and use the patch tool to revert the changes.
+  warnings.warn(msg, SourceChangeWarning)
+/home/hanle/anaconda3/envs/py3/lib/python3.6/site-packages/torch/serialization.py:367: SourceChangeWarning: source code of class 'torch.nn.modules.batchnorm.BatchNorm2d' has changed. you can retrieve the original source code by accessing the object's source attribute or set `torch.nn.Module.dump_patches = True` and use the patch tool to revert the changes.
+  warnings.warn(msg, SourceChangeWarning)
+/home/hanle/anaconda3/envs/py3/lib/python3.6/site-packages/torch/serialization.py:367: SourceChangeWarning: source code of class 'torch.nn.modules.linear.Linear' has changed. you can retrieve the original source code by accessing the object's source attribute or set `torch.nn.Module.dump_patches = True` and use the patch tool to revert the changes.
+  warnings.warn(msg, SourceChangeWarning)
+previous best AUC: 	0.9158
+=============================================
+Processed:  100
+Processed:  200
+Processed:  300
+Processed:  400
+Processed:  500
+Processed:  600
+Processed:  700
+Processed:  800
+Processed:  900
+Processed:  1000
+Processed:  1100
+Processed:  1200
+Processed:  1300
+Processed:  1400
+Processed:  1500
+Processed:  1600
+Processed:  1700
+Processed:  1800
+Processed:  1900
+Processed:  2000
+Processed:  2100
+Processed:  2200
+Processed:  2300
+Processed:  2400
+Processed:  2500
+Processed:  2600
+Processed:  2700
+Processed:  2800
+Processed:  2900
+Processed:  3000
+Processed:  3100
+Processed:  3200
+Processed:  3300
+Processed:  3400
+Processed:  3500
+Processed:  3600
+Processed:  3700
+Processed:  3800
+Processed:  3900
+Processed:  4000
+Processed:  4100
+Processed:  4200
+Processed:  4300
+Processed:  4400
+Processed:  4500
+Processed:  4600
+Processed:  4700
+Processed:  4800
+Processed:  4900
+Processed: 143/215 	 Time Remaining: 0.20230728829657285mins
+Processed:  5000
+Processed: 146/215 	 Time Remaining: 0.21966404645410298mins
+Processed:  5100
+Processed:  5200
+Processed:  5300
+Processed:  5400
+Processed:  5500
+Processed:  5600
+Processed:  5700
+Processed:  5800
+Processed:  5900
+Processed:  6000
+Processed:  6100
+Processed: 175/215 	 Time Remaining: 0.13228222074962803mins
+Processed:  6200
+Processed: 178/215 	 Time Remaining: 0.12813094602095498mins
+Processed:  6300
+Processed: 181/215 	 Time Remaining: 0.12276979480659105mins
+Processed:  6400
+Processed: 184/215 	 Time Remaining: 0.11738808604254236mins
+Processed:  6500
+Processed: 187/215 	 Time Remaining: 0.10985116746123881mins
+Processed:  6600
+Processed:  6700
+Processed:  6800
+Processed:  6900
+Processed:  7000
+Processed:  7100
+Processed:  7200
+Processed:  7300
+Processed:  7400
+Processed: 213/215 	 Time Remaining: 0.007855268188858556mins
+len of inputs if less than 2
+len of all coor:  (7446, 2)
+shape of Or:  (848, 1)
+shape of inds:  (848,)
+Elapsed Time:  0.9141254186630249
+DONE!
+/data01/shared/hanle/tumor_project/train_tumor_classification/quip_cancer_segmentation/data/patches/BC_061_0_2.svs//patch-level-lym.txt generating
+/home/hanle/anaconda3/envs/py3/lib/python3.6/site-packages/torchvision-0.2.0-py3.6.egg/torchvision/transforms/transforms.py:156: UserWarning: The use of the transforms.Scale transform is deprecated, please use transforms.Resize instead.
+start predicting...
+| Load pretrained at  /data01/shared/hanle/tumor_project/train_tumor_classification/quip_cancer_segmentation/data/models_cnn/RESNET_34_cancer_350px_lr_1e-2_decay_5_jitter_val6slides_harder_pretrained_cancer_tils_none_1117_1811_0.9157633018398808_9.t7...
+/home/hanle/anaconda3/envs/py3/lib/python3.6/site-packages/torch/serialization.py:367: SourceChangeWarning: source code of class 'torch.nn.modules.conv.Conv2d' has changed. you can retrieve the original source code by accessing the object's source attribute or set `torch.nn.Module.dump_patches = True` and use the patch tool to revert the changes.
+  warnings.warn(msg, SourceChangeWarning)
+/home/hanle/anaconda3/envs/py3/lib/python3.6/site-packages/torch/serialization.py:367: SourceChangeWarning: source code of class 'torch.nn.modules.batchnorm.BatchNorm2d' has changed. you can retrieve the original source code by accessing the object's source attribute or set `torch.nn.Module.dump_patches = True` and use the patch tool to revert the changes.
+  warnings.warn(msg, SourceChangeWarning)
+/home/hanle/anaconda3/envs/py3/lib/python3.6/site-packages/torch/serialization.py:367: SourceChangeWarning: source code of class 'torch.nn.modules.linear.Linear' has changed. you can retrieve the original source code by accessing the object's source attribute or set `torch.nn.Module.dump_patches = True` and use the patch tool to revert the changes.
+  warnings.warn(msg, SourceChangeWarning)
+previous best AUC: 	0.9158
+=============================================
+Processed:  100
+Processed:  200
+Processed:  300
+Processed:  400
+Processed:  500
+Processed:  600
+Processed:  700
+Processed:  800
+Processed:  900
+Processed:  1000
+Processed:  1100
+Processed:  1200
+Processed:  1300
+Processed:  1400
+Processed:  1500
+Processed:  1600
+Processed:  1700
+Processed:  1800
+Processed:  1900
+Processed:  2000
+Processed:  2100
+Processed:  2200
+Processed:  2300
+Processed:  2400
+Processed:  2500
+Processed:  2600
+Processed:  2700
+Processed:  2800
+Processed:  2900
+Processed:  3000
+Processed:  3100
+Processed:  3200
+Processed:  3300
+Processed:  3400
+Processed:  3500
+Processed:  3600
+Processed:  3700
+Processed:  3800
+Processed:  3900
+Processed:  4000
+Processed:  4100
+Processed:  4200
+Processed:  4300
+Processed:  4400
+Processed:  4500
+Processed:  4600
+Processed:  4700
+Processed:  4800
+Processed:  4900
+Processed:  5000
+Processed:  5100
+Processed:  5200
+Processed:  5300
+Processed:  5400
+Processed:  5500
+Processed:  5600
+Processed:  5700
+Processed:  5800
+Processed:  5900
+Processed:  6000
+Processed:  6100
+Processed:  6200
+Processed:  6300
+Processed:  6400
+Processed:  6500
+Processed:  6600
+Processed:  6700
+Processed:  6800
+Processed:  6900
+Processed:  7000
+Processed:  7100
+Processed:  7200
+Processed:  7300
+Processed:  7400
+Processed:  7500
+Processed:  7600
+Processed:  7700
+Processed:  7800
+Processed:  7900
+Processed:  8000
+Processed:  8100
+Processed:  8200
+Processed:  8300
+Processed:  8400
+Processed:  8500
+Processed:  8600
+Processed:  8700
+Processed:  8800
+Processed:  8900
+Processed:  9000
+Processed:  9100
+Processed:  9200
+Processed:  9300
+Processed:  9400
+Processed:  9500
+Processed:  9600
+Processed:  9700
+Processed:  9800
+Processed:  9900
+Processed:  10000
+Processed:  10100
+Processed:  10200
+Processed:  10300
+Processed:  10400
+Processed:  10500
+Processed:  10600
+Processed:  10700
+Processed:  10800
+Processed:  10900
+Processed:  11000
+Processed:  11100
+Processed:  11200
+Processed:  11300
+Processed:  11400
+Processed:  11500
+Processed:  11600
+Processed:  11700
+Processed:  11800
+Processed: 333/454 	 Time Remaining: 0.3266737249401118mins
+Processed:  11900
+Processed:  12000
+Processed:  12100
+Processed:  12200
+Processed:  12300
+Processed:  12400
+Processed:  12500
+Processed:  12600
+Processed:  12700
+Processed:  12800
+Processed:  12900
+Processed:  13000
+Processed:  13100
+Processed:  13200
+Processed: 372/454 	 Time Remaining: 0.2336967582130091mins
+Processed:  13300
+Processed:  13400
+Processed:  13500
+Processed:  13600
+Processed:  13700
+Processed:  13800
+Processed:  13900
+Processed:  14000
+Processed:  14100
+Processed:  14200
+Processed:  14300
+Processed:  14400
+Processed:  14500
+Processed:  14600
+Processed: 411/454 	 Time Remaining: 0.12540338554714908mins
+Processed:  14700
+Processed: 414/454 	 Time Remaining: 0.11931947809486572mins
+Processed:  14800
+Processed:  14900
+Processed:  15000
+Processed:  15100
+Processed:  15200
+Processed:  15300
+Processed:  15400
+Processed:  15500
+Processed:  15600
+Processed:  15700
+Processed:  15800
+Processed:  15900
+Processed:  16000
+Processed: 452/454 	 Time Remaining: 0.0060412760505281mins
+len of inputs if less than 2
+len of all coor:  (16080, 2)
+shape of Or:  (528, 1)
+shape of inds:  (528,)
+Elapsed Time:  1.4432315826416016
+DONE!

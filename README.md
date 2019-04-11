@@ -14,6 +14,8 @@ Create folder named "data" and subfoders below:
 - data/heatmap_txt: to contain prediction output
 
 ### Step 2:
+- Run "bash create_container.sh" to create container for the docker
+- Run "bash start_interactive_bash.sh" to start the docker workspace
 - Clone codes from this repository to workspace of docker.
 - run: "mv quip_cancer_segmentation/* ."
 - Follow instructions in for Training and Testing below.

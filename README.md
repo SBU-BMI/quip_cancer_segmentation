@@ -2,6 +2,22 @@
 
 This repo is for training and testing brca cancer detection pipeline.
 
+Docker file is available at: [pytorch docker] (https://cloud.docker.com/repository/docker/hanle/brca-pipeline-image)
+
+### Step 1:
+Create folder named "data" and subfoders below:
+
+- data/svs: to contains *.svs files
+- data/training_data: to contain training data
+- data/patches: to contain output from patch extraction
+- data/log: to contain log files
+- data/heatmap_txt: to contain prediction output
+
+### Step 2:
+- Clone codes from this repository to workspace of docker.
+- run: "mv quip_cancer_segmentation/* ."
+- Follow instructions in for Training and Testing below.
+
 # Dependencies
 
  - [Pytorch 0.4.0](http://pytorch.org/)

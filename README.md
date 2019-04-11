@@ -2,7 +2,7 @@
 
 This repo is for training and testing brca cancer detection pipeline.
 
-Docker file is available at: [pytorch docker](https://cloud.docker.com/repository/docker/hanle/brca-pipeline-image)
+A Docker image is available at: [pytorch docker](https://cloud.docker.com/repository/docker/hanle/brca-pipeline-image)
 
 ### Step 1:
 Create folder named "data" and subfoders below:

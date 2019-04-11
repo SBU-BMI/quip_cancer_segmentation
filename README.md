@@ -18,7 +18,7 @@ Create folder named "data" and subfoders below:
 - Run "bash start_interactive_bash.sh" to start the docker workspace
 - Clone codes from this repository to workspace of docker.
 - run: "mv quip_cancer_segmentation/* ."
-- Follow instructions in for Training and Testing below.
+- Follow instructions for Training and Testing as below.
 
 # Dependencies
 

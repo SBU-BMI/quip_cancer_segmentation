@@ -48,10 +48,10 @@ Create folder named "data" and subfoders below:
 - Copy all .svs files to data/svs
   + For example, cd to your data/svs, run "cp /data01/shared/hanle/svs_tcga_seer_brca/TCGA-3C-AALI-01Z-00-DX2.svs ."
 #### Process .svs files:
-- Patch extraction: nohup bash patch_extraction_cancer_40X/start.sh &
+- Patch extraction: "nohup bash patch_extraction_cancer_40X/start.sh &"
   + For demo, cd to your data/patches, cun "cp -r /data10/shared/hanle/quip_cancer_segmentation/data/patches/TCGA-E2-A152-01Z-00-DX1.svs ." which is a completed extraction of a slide.
-- Prediction: nohup bash prediction/start.sh &
-- Copy heatmap files: nohup bash heatmap_gen/start.sh &
+- Prediction: ssh to computational node, run "nohup bash prediction/start.sh &"
+- Copy heatmap files: "nohup bash heatmap_gen/start.sh &"
   + Output are in data/heatmap_txt
 #### Generate Grayscale heatmap: 
   + Run "bash download_heatmap/get_grayscale_heatmaps/start.sh"

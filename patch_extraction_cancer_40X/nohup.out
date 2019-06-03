@@ -1,4 +1,0 @@
-start.sh: line 6: /data10/shared/hanle/quip_cancer_segmentation/log/log.save_svs_to_tiles.thread_1.txt: No such file or directory
-start.sh: line 5: /data10/shared/hanle/quip_cancer_segmentation/log/log.save_svs_to_tiles.thread_0.txt: No such file or directory
-start.sh: line 8: /data10/shared/hanle/quip_cancer_segmentation/log/log.save_svs_to_tiles.thread_3.txt: No such file or directory
-start.sh: line 7: /data10/shared/hanle/quip_cancer_segmentation/log/log.save_svs_to_tiles.thread_2.txt: No such file or directory

@@ -45,5 +45,8 @@ Create folder named "data" and subfoders below:
 ## Testing
 - Change MODEL to your model name that is stored in data/models_cnn
 - Copy all .svs files to data/svs
+  + For example, cd to your data/svs, run "cp /data01/shared/hanle/svs_tcga_seer_brca/TCGA-3C-AALI-01Z-00-DX2.svs ."
 - Run "bash svs_2_heatmap.sh"
 - Output are in data/heatmap_txt
+- Generate Grayscale heatmap: run "bash download_heatmap/get_grayscale_heatmaps/start.sh"
+  + Results are stored at download_heatmap/get_grayscale_heatmaps/grayscale_heatmaps and data/grayscale_heatmaps

@@ -43,6 +43,7 @@ Create folder named "data" and subfoders below:
 - Trained models are in "checkpoint"
 
 ## Testing
+#### Preparation:
 - Change MODEL to your model name that is stored in data/models_cnn
 - Copy all .svs files to data/svs
   + For example, cd to your data/svs, run "cp /data01/shared/hanle/svs_tcga_seer_brca/TCGA-3C-AALI-01Z-00-DX2.svs ."

@@ -8,7 +8,4 @@ nohup bash save_svs_to_tiles.sh 2 4 &> ${LOG_OUTPUT_FOLDER}/log.save_svs_to_tile
 nohup bash save_svs_to_tiles.sh 3 4 &> ${LOG_OUTPUT_FOLDER}/log.save_svs_to_tiles.thread_3.txt &
 wait
 
-#python -u back_ground_filter_all_folders.py ${PATCH_PATH} ${SVS_INPUT_PATH}
-#wait
-
 exit 0

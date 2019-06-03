@@ -7,7 +7,7 @@ import datetime
 import time
 import cv2
 from shutil import copyfile as cp
-#from stain_norm_python.color_normalize_single_folder import color_normalize_single_folder
+import multiprocessing as mp
 
 slide_name = sys.argv[2] + '/' + sys.argv[1];
 output_folder = sys.argv[3] + '/' + sys.argv[1];
@@ -48,6 +48,7 @@ except:
 
 print('height/width: {}/{}'.format(height, width))
 
+corrs = []
 for x in range(1, width, pw):
     for y in range(1, height, pw):
         if x + pw > width:
@@ -59,18 +60,24 @@ for x in range(1, width, pw):
             pw_y = height - y;
         else:
             pw_y = pw;
+        corrs.append((x, y, pw_x, pw_y))
 
+def extract_patch(corr):
+    x, y, pw_x, pw_y = corr
 
-        fname = '{}/{}_{}_{}_{}.png'.format(output_folder, x, y, pw, patch_size_40X)
+    fname = '{}/{}_{}_{}_{}.png'.format(output_folder, x, y, pw, patch_size_40X)
 
-        patch = oslide.read_region((x, y), 0, (pw_x, pw_y));
-        #shahira: skip where the alpha channel is zero
-        patch_arr = np.array(patch);
-        if(patch_arr[:,:,3].max() == 0):    # this is blank regions
-            continue;
-        patch = patch.resize((int(patch_size_40X * pw_x / pw), int(patch_size_40X * pw_y / pw)), Image.ANTIALIAS);
-        patch.save(fname);
+    patch = oslide.read_region((x, y), 0, (pw_x, pw_y));
+    #shahira: skip where the alpha channel is zero
+    patch_arr = np.array(patch);
+    if(patch_arr[:,:,3].max() == 0):    # this is blank regions
+        return
+    patch = patch.resize((int(patch_size_40X * pw_x / pw), int(patch_size_40X * pw_y / pw)), Image.ANTIALIAS);
+    patch.save(fname);
+
+print(slide_name, len(corrs))
+pool = mp.Pool(processes=4)
+pool.map(extract_patch, corrs)
 
 print('Elapsed time: ', (time.time() - start)/60.0)
-#open(fdone, 'w').close();
 

@@ -2,9 +2,6 @@ import torch
 import numpy as np
 from torch.utils.data import DataLoader, Dataset
 import PIL.Image as Image
-# import data_aug as DA
-#import cv2
-
 import torch.optim as optim
 import torch.nn.parallel
 import torch.backends.cudnn as cudnn

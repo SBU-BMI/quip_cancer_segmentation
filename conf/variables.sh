@@ -9,22 +9,21 @@ MONGODB_PORT=27017
 HEATMAP_VERSION=cancer_BC_v2
 
 # Base directory
-BASE_DIR=/workspace/
-BASE_OUT=/home/data/
+BASE_DIR=/data10/shared/hanle/quip_cancer_segmentation  # change this to your current working path
 
 # The list of case_ids you want to download heaetmaps from
 CASE_LIST=${BASE_DIR}/data/raw_marking_to_download_case_list/case_list.txt
-DATA_PATH=${BASE_OUT}/training_data        # Change this to your training data folder
+DATA_PATH=${BASE_DIR}/training_data        # Change this to your training data folder
 DATA_LIST='tumor_data_list_toy.txt'        # Text file to contain subfolders for testing (1st line), training (the rest)
 MODEL='RESNET_34_cancer_350px_lr_1e-2_decay_5_jitter_val6slides_harder_pretrained_cancer_tils_none_1117_1811_0.9157633018398808_9.t7'     # model is saved in data/models_cnn
 
 
 # Paths of data, log, input, and output
 JSON_OUTPUT_FOLDER=${BASE_DIR}/data/heatmap_jsons
-HEATMAP_TXT_OUTPUT_FOLDER=${BASE_OUT}/heatmap_txt
-LOG_OUTPUT_FOLDER=${BASE_OUT}/log
-SVS_INPUT_PATH=${BASE_OUT}/svs
-PATCH_PATH=${BASE_OUT}/patches
+HEATMAP_TXT_OUTPUT_FOLDER=${BASE_DIR}/heatmap_txt
+LOG_OUTPUT_FOLDER=${BASE_DIR}/log
+SVS_INPUT_PATH=${BASE_DIR}/svs
+PATCH_PATH=${BASE_DIR}/patches
 PATCH_SAMPLING_LIST_PATH=${BASE_DIR}/data/patch_sample_list
 RAW_MARKINGS_PATH=${BASE_DIR}/data/raw_marking_xy
 MODIFIED_HEATMAPS_PATH=${BASE_DIR}/data/modified_heatmaps

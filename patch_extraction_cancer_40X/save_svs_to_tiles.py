@@ -14,6 +14,8 @@ output_folder = sys.argv[3] + '/' + sys.argv[1];
 patch_size_40X = 2100;      # 350*8 --> 8*8 smaller non-overlap patches (350x350)
 level = 0
 
+if not os.path.exists(sys.argv[3]): os.mkdir(sys.argv[3])
+
 start = time.time()
 fdone = '{}/extraction_done.txt'.format(output_folder);
 if os.path.isfile(fdone):
@@ -22,8 +24,7 @@ if os.path.isfile(fdone):
 
 print('extracting {}'.format(output_folder));
 
-if not os.path.exists(output_folder):
-    os.mkdir(output_folder);
+if not os.path.exists(output_folder): os.mkdir(output_folder);
 
 try:
     oslide = openslide.OpenSlide(slide_name);

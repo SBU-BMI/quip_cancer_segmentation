@@ -13,12 +13,6 @@ for files in ${IN_FOLDER}/*.*; do
     if [ $((LINE_N % MAX_PARA)) -ne ${COD_PARA} ]; then continue; fi
 
     SVS=`echo ${files} | awk -F'/' '{print $NF}'`
-    
-    if [ ! -f ${OUT_FOLDER}/${SVS}/*_mask.png ]; then
-        python -u back_ground_filter.py ${IN_FOLDER}/${SVS} ${OUT_FOLDER}/${SVS}
-        wait
-        echo 'Done extracting background'
-    fi
 
     python save_svs_to_tiles.py ${SVS} ${IN_FOLDER} ${OUT_FOLDER}
     
@@ -26,13 +20,8 @@ for files in ${IN_FOLDER}/*.*; do
         echo "failed extracting patches for " ${SVS}
         rm -rf ${OUT_FOLDER}/${SVS}
     else
-        #cd ./stain_norm_python
-        #python color_normalize_single_folder.py ${OUT_FOLDER}/${SVS}
-        #cd ../
-        #wait
         touch ${OUT_FOLDER}/${SVS}/extraction_done.txt
     fi
-        
 
 done
 

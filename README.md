@@ -23,12 +23,13 @@ Create folder named "data" and subfoders below:
 # Dependencies
 
  - [Pytorch 0.4.0](http://pytorch.org/)
- - [OpenCV-Python](https://pypi.python.org/pypi/opencv-python)
+ - Torchvision 0.2.0
+ - cv2 (3.4.1)
  - [Openslide 1.1.1](https://openslide.org/api/python/)
  - [sklearn](https://scikit-learn.org/stable/)
  - [PIL](https://pillow.readthedocs.io/en/3.1.x/reference/Image.html)
  
- Details are in file brca_environ.txt
+ More details are in file brca_environ.txt
 
 # Running codes
 - Codes are in folder scripts, including training and testing

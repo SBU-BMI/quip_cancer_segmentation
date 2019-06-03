@@ -44,7 +44,7 @@ Create folder named "data" and subfoders below:
 
 ## Testing
 #### Preparation:
-- Change MODEL to your model name that is stored in data/models_cnn
+- Change MODEL in conf/variables.sh to your model name that is stored in data/models_cnn
 - Copy all .svs files to data/svs
   + For example, cd to your data/svs, run "cp /data01/shared/hanle/svs_tcga_seer_brca/TCGA-3C-AALI-01Z-00-DX2.svs ."
 #### Process .svs files:

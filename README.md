@@ -56,3 +56,6 @@ Create folder named "data" and subfoders below:
 #### Generate Grayscale heatmap: 
   + Run "bash download_heatmap/get_grayscale_heatmaps/start.sh"
   + Results are stored at download_heatmap/get_grayscale_heatmaps/grayscale_heatmaps and data/grayscale_heatmaps
+  
+#### Confirm the results:
+  + Compare the grayscale heatmap with the one on website: [https://mathbiol.github.io/tcgatil/](https://mathbiol.github.io/tcgatil/)

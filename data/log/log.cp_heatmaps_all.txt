@@ -1,1 +1,0 @@
-cp: cannot stat `/data01/shared/hanle/tumor_project/train_tumor_classification/quip_cancer_segmentation/data/patches/*/patch-level-necrosis.txt': No such file or directory

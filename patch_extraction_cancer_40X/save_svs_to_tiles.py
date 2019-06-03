@@ -11,7 +11,7 @@ from shutil import copyfile as cp
 
 slide_name = sys.argv[2] + '/' + sys.argv[1];
 output_folder = sys.argv[3] + '/' + sys.argv[1];
-patch_size_40X = 2100;
+patch_size_40X = 2100;      # 350*8 --> 8*8 smaller non-overlap patches (350x350)
 level = 0
 
 start = time.time()
@@ -31,7 +31,10 @@ try:
         mag = 10.0 / float(oslide.properties[openslide.PROPERTY_NAME_MPP_X]);
     elif "XResolution" in oslide.properties:
         mag = 10.0 / float(oslide.properties["XResolution"]);
+    elif 'tiff.XResolution' in oslide.properties:   # for Multiplex IHC WSIs, .tiff images
+        mag = 10.0 / float(oslide.properties["tiff.XResolution"]);
     else:
+        print('[WARNING] mpp value not found. Assuming it is 40X with mpp=0.254!', slide_name);
         mag = 10.0 / float(0.254);
 
     pw = int(patch_size_40X * mag / 40);  # scale patch size from 40X to 'mag'
@@ -42,14 +45,7 @@ except:
     print('{}: exception caught'.format(slide_name));
     exit(1);
 
-mask_file = '{}/{}_mask.png'.format(output_folder, sys.argv[1][:-4])
-print('mask_file: ', mask_file)
-mask = cv2.imread(mask_file, 0)
-mask[mask > 0] = 1
-scale = height/mask.shape[0]
-
 print('height/width: {}/{}'.format(height, width))
-print('mask size: ', mask.shape)
 
 for x in range(1, width, pw):
     for y in range(1, height, pw):
@@ -64,28 +60,15 @@ for x in range(1, width, pw):
             pw_y = pw;
 
 
-        fname = '{}/{}_{}_{}_{}.png'.format(output_folder, x, y, pw, patch_size_40X);
+        fname = '{}/{}_{}_{}_{}.png'.format(output_folder, x, y, pw, patch_size_40X)
 
-        x_m = int(x/scale); y_m = int(y/scale)
-        isWhite = np.sum(mask[y_m:y_m + int(pw_y/scale), x_m:x_m + int(pw_x/scale)])/(pw_x*pw_y/scale/scale) > 0.95
-        x_resize = int(np.ceil(patch_size_40X * pw_x/pw)); y_resize = int(np.ceil(patch_size_40X * pw_y/pw))
-
-        #print('pw_x/pw_y: {}/{}'.format(pw_x, pw_y))
-        #print('x_resize/y_resize: {}/{}'.format(x_resize, y_resize))
-        if isWhite:
-            # this is white patch, generate dummy patch for fast computation
-            dummy = np.ones((y_resize, x_resize, 3))*255
-            dummy = dummy.astype(np.uint8)
-            cv2.imwrite(fname, dummy)
-        else:
-            patch = oslide.read_region((x, y), level, (pw_x, pw_y));
-            '''
-            location (tuple) – (x, y) tuple giving the top left pixel in the level 0 reference frame
-            level (int) – the level number
-            size (tuple) – (width, height) tuple giving the region size
-            '''
-            patch = patch.resize((x_resize, y_resize), Image.ANTIALIAS)
-            patch.save(fname);
+        patch = oslide.read_region((x, y), 0, (pw_x, pw_y));
+        #shahira: skip where the alpha channel is zero
+        patch_arr = np.array(patch);
+        if(patch_arr[:,:,3].max() == 0):    # this is blank regions
+            continue;
+        patch = patch.resize((int(patch_size_40X * pw_x / pw), int(patch_size_40X * pw_y / pw)), Image.ANTIALIAS);
+        patch.save(fname);
 
 print('Elapsed time: ', (time.time() - start)/60.0)
 #open(fdone, 'w').close();

@@ -12,7 +12,6 @@ from torch.optim import lr_scheduler
 import copy
 import torch.nn.parallel
 import torch.optim as optim
-#import data_aug as DA
 from sklearn.metrics import mean_squared_error, accuracy_score, hamming_loss, roc_curve, auc, f1_score
 import sys
 import torch.backends.cudnn as cudnn

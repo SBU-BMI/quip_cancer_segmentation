@@ -8,7 +8,7 @@ PARAL=$2
 MAX_PARAL=$3
 DEVICE=$4
 
-DATA_FILE=patch-level-lym.txt
+DATA_FILE=patch-level-cancer.txt
 DONE_FILE=extraction_done.txt
 EXEC_FILE=pred.py
 

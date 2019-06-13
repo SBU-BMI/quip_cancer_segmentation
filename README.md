@@ -1,6 +1,7 @@
 # quip_cancer_segmentation
 
 This repo is for training and testing brca cancer detection pipeline.
+
 NOTE: download the trained models [here](https://drive.google.com/open?id=1km7gVpBpLbBovExTgt3CE8JRwpTEl57F), extract 3 file *.t7 to data/models_cnn
 
 # Docker Instructions 

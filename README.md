@@ -1,8 +1,10 @@
 # quip_cancer_segmentation
 
-This repo is for training and testing brca cancer detection pipeline.
+This repo is for training and testing brca cancer detection pipeline using 3 standard CNNs: VGG16, Resnet-34, and Inception-v4.
 
 NOTE: download the trained models [here](https://drive.google.com/open?id=1km7gVpBpLbBovExTgt3CE8JRwpTEl57F), extract 3 *.t7  files to data/models_cnn
+
+The default settings are for Resnet-34 since it performs the best on the public testset. To use other models, change the variable "MODEL" in conf/variables.sh to other models name downloaded from google drive above.
 
 # Docker Instructions 
 

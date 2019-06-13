@@ -1,10 +1,12 @@
 # quip_cancer_segmentation
 
 This repo is for training and testing brca cancer detection pipeline.
+NOTE: download the trained models [here](https://drive.google.com/open?id=1km7gVpBpLbBovExTgt3CE8JRwpTEl57F), extract 3 file *.t7 to data/models_cnn
+
+# Docker Instructions 
 
 A Docker image is available at: [pytorch docker](https://cloud.docker.com/repository/docker/hanle/brca-pipeline-image)
-
-### Step 1:
+## Step 1:
 Create folder named "data" and subfoders below:
 
 - data/svs: to contains *.svs files
@@ -13,7 +15,7 @@ Create folder named "data" and subfoders below:
 - data/log: to contain log files
 - data/heatmap_txt: to contain prediction output
 
-### Step 2:
+## Step 2:
 - Run "bash create_container.sh" to create container for the docker
 - Run "bash start_interactive_bash.sh" to start the docker workspace
 - Clone codes from this repository to workspace of docker.
@@ -31,7 +33,7 @@ Create folder named "data" and subfoders below:
  
  More details are in file brca_environ.txt
 
-# Running codes
+# Running Codes Instrucstions
 - Codes are in folder scripts, including training and testing
 - Need to setup folder path for training data, model. All parameters are found in conf/variables.sh
 ## Training:

@@ -15,7 +15,7 @@ BASE_DIR=/data10/shared/hanle/quip_cancer_segmentation  # change this to your cu
 CASE_LIST=${BASE_DIR}/data/raw_marking_to_download_case_list/case_list.txt
 DATA_PATH=${BASE_DIR}/data/training_data        # Change this to your training data folder
 DATA_LIST='tumor_data_list_toy.txt'        # Text file to contain subfolders for testing (1st line), training (the rest)
-MODEL='RESNET_34_cancer_350px_lr_1e-2_decay_5_jitter_val6slides_harder_pretrained_cancer_tils_none_1117_1811_0.9157633018398808_9.t7'     # model is saved in data/models_cnn
+MODEL='RESNET_34_cancer_350px_lr_1e-2_decay_5_jitter_val6slides_harder_pretrained_none_1117_0044_0.8715164676076728_17.t7'     # model is saved in data/models_cnn
 
 
 # Paths of data, log, input, and output

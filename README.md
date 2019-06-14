@@ -1,7 +1,7 @@
 # quip_cancer_segmentation
 
 This repo is for training and testing brca cancer detection pipeline using 3 standard CNNs: VGG16, Resnet-34, and Inception-v4. 
-More details are found in the paper: [Utilizing Automated Breast Cancer Detection to Identify Spatial Distributions of Tumor Infiltrating Lymphocytes in Invasive Breast Cancer][https://arxiv.org/abs/1905.10841]
+More details are found in the paper: [Utilizing Automated Breast Cancer Detection to Identify Spatial Distributions of Tumor Infiltrating Lymphocytes in Invasive Breast Cancer](https://arxiv.org/abs/1905.10841)
 
 NOTE: download the trained models [here](https://drive.google.com/open?id=1km7gVpBpLbBovExTgt3CE8JRwpTEl57F), extract 3 *.t7  files to data/models_cnn
 
@@ -67,9 +67,9 @@ Create folder named "data" and subfoders below:
 
 
 # Citation
-@article{le2019utilizing,
-  title={Utilizing Automated Breast Cancer Detection to Identify Spatial Distributions of Tumor Infiltrating Lymphocytes in Invasive Breast Cancer},
-  author={Le, Han and Gupta, Rajarsi and Hou, Le and Abousamra, Shahira and Fassler, Danielle and Kurc, Tahsin and Samaras, Dimitris and Batiste, Rebecca and Zhao, Tianhao and Van Dyke, Alison L and Sharma, Ashish and Bremer, Erich and Almeida, Jonas S. and Saltz, Joel},
-  journal={arXiv preprint arXiv:1905.10841},
-  year={2019}
-}
+     @article{le2019utilizing,
+       title={Utilizing Automated Breast Cancer Detection to Identify Spatial Distributions of Tumor Infiltrating Lymphocytes in Invasive Breast Cancer},
+       author={Le, Han and Gupta, Rajarsi and Hou, Le and Abousamra, Shahira and Fassler, Danielle and Kurc, Tahsin and Samaras, Dimitris and Batiste, Rebecca and Zhao, Tianhao and Van Dyke, Alison L and Sharma, Ashish and Bremer, Erich and Almeida, Jonas S. and Saltz, Joel},
+       journal={arXiv preprint arXiv:1905.10841},
+       year={2019}
+     }

@@ -7,7 +7,7 @@ RUN		pip install --upgrade pip && \
 		conda install --yes scikit-learn && \
 		pip install Pillow && \
 		pip install torchvision==0.2.1 && \
-		apt-get install --yes python3-openslide && \
+		apt-get install --yes python3-openslide wget zip && \
 		pip install openslide-python && \
 		conda install --yes -c conda-forge opencv
 

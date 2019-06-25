@@ -1,70 +1,36 @@
 # quip_cancer_segmentation
 
-This repo is for training and testing brca cancer detection pipeline using 3 standard CNNs: VGG16, Resnet-34, and Inception-v4. 
-More details are found in the paper: [Utilizing Automated Breast Cancer Detection to Identify Spatial Distributions of Tumor Infiltrating Lymphocytes in Invasive Breast Cancer](https://arxiv.org/abs/1905.10841)
-
-NOTE: download the trained models [here](https://drive.google.com/open?id=1km7gVpBpLbBovExTgt3CE8JRwpTEl57F), extract 3 *.t7  files to data/models_cnn
-
-The default settings are for Resnet-34 since it performs the best on the public testset. To use other models, change the variable "MODEL" in conf/variables.sh to other models name downloaded from google drive above.
+This repo is for running the BRCA (breast cancer) cancer detection pipeline using one of the 3 standard CNNs: 
+VGG16, Resnet-34, and Inception-v4. More details are found in the paper: [Utilizing Automated Breast Cancer Detection to Identify Spatial Distributions of Tumor Infiltrating Lymphocytes in Invasive Breast Cancer](https://arxiv.org/abs/1905.10841)
 
 # Docker Instructions 
 
-A Docker image is available at: [pytorch docker](https://cloud.docker.com/repository/docker/hanle/brca-pipeline-image)
+Build the docker image by: 
+
+docker build -t cancer_prediction .  (Note the dot at the end). 
+
 ## Step 1:
-Create folder named "data" and subfoders below:
+Create folder named "data" and subfoders below on the host machine:
 
 - data/svs: to contains *.svs files
-- data/training_data: to contain training data
 - data/patches: to contain output from patch extraction
 - data/log: to contain log files
 - data/heatmap_txt: to contain prediction output
+- data/heatmap_jsons: to contain prediction output as json files
 
 ## Step 2:
-- Run "bash create_container.sh" to create container for the docker
-- Run "bash start_interactive_bash.sh" to start the docker workspace
-- Clone codes from this repository to workspace of docker.
-- run: "mv quip_cancer_segmentation/* ."
-- Follow instructions for Training and Testing as below.
+- Run the docker container as follows: 
 
-# Dependencies
-
- - [Pytorch 0.4.0](http://pytorch.org/)
- - Torchvision 0.2.0
- - cv2 (3.4.1)
- - [Openslide 1.1.1](https://openslide.org/api/python/)
- - [sklearn](https://scikit-learn.org/stable/)
- - [PIL](https://pillow.readthedocs.io/en/3.1.x/reference/Image.html)
+nvidia-docker run --name cancer_prediction_pipeline -itd -v <path-to-data>:/data -e MODEL="<model>" -e HEATMAP_VERSION="<heatmap version>" -e CUDA_VISIBLE_DEVICES='<cuda device id>' -e CANCER_TYPE="breast" cancer_prediction svs_2_heatmap.sh 
  
- More details are in file brca_environ.txt
+MODEL -- the CNN model to use. It can be resnet34, inceptionv4, or vgg16
+HEATMAP_VERSION -- used to set the analysis execution id of the run (for uploading to the database)
+CUDA_VISIBLE_DEVICES -- set to select the GPU to use 
+CANCER_TYPE -- set the cancer type. 
 
-# Running Codes Instrucstions
-- Codes are in folder scripts, including training and testing
-- Need to setup folder path for training data, model. All parameters are found in conf/variables.sh
-## Training:
-- Settings are stored in conf/variables.sh
-- Change DATA_PATH to your folder that contains all subfolders for training
-- Change DATA_LIST to your text file name that contains list of subfolders for training and validataion. 1st line is for validation, the rest is for training. Example of the list is tumor_data_list_toy.txt 
-- Run "bash train.sh"
-- Log files are in data/log
-- Trained models are in "checkpoint"
+The following example runs the cancer detection pipeline using the ResNet-34 model on GPU 0. It will process images in /home/user/data/svs and output the results to /home/user/data/output. 
 
-## Testing
-#### Preparation:
-- Change MODEL in conf/variables.sh to your model name that is stored in data/models_cnn
-- Copy all .svs files to data/svs
-  + For example, cd to your data/svs, run "cp /data01/shared/hanle/svs_tcga_seer_brca/TCGA-3C-AALI-01Z-00-DX2.svs ."
-#### Process .svs files:
-- Patch extraction: "nohup bash patch_extraction_cancer_40X/start.sh &"
-  + For demo, cd to your data/patches, run "cp -r /data10/shared/hanle/quip_cancer_segmentation/data/patches/TCGA-E2-A152-01Z-00-DX1.svs ." which is a completed extraction of a slide.
-- Prediction: ssh to computational node, run "nohup bash prediction/start.sh &"
-- Copy heatmap files: "nohup bash heatmap_gen/start.sh &"
-  + Output are in data/heatmap_txt
-#### Generate Grayscale heatmap: 
-  + Run "bash download_heatmap/get_grayscale_heatmaps/start.sh"
-  + Results are stored at download_heatmap/get_grayscale_heatmaps/grayscale_heatmaps and data/grayscale_heatmaps
-#### Confirm the results:
-  + Compare the grayscale heatmap with the one on website: [https://mathbiol.github.io/tcgatil/](https://mathbiol.github.io/tcgatil/)
-
+nvidia-docker run --name cancer_prediction_pipeline -itd -v /home/user/data:/data -e MODEL="resnet34" -e HEATMAP_VERSION="resnet_v1" -e CUDA_VISIBLE_DEVICES='0' -e CANCER_TYPE="breast" cancer_prediction svs_2_heatmap.sh
 
 # Citation
      @article{le2019utilizing,

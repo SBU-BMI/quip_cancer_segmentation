@@ -16,6 +16,6 @@ for files in ${LYM_FOLDER}/*; do
     fi
 done
 
-python low_res_all.py
+# python low_res_all.py
 
 exit 0

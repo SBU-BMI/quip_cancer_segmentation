@@ -3,9 +3,12 @@
 # Variables
 DEFAULT_OBJ=20
 DEFAULT_MPP=0.5
-CANCER_TYPE=quip
 MONGODB_HOST=xyz.bmi.stonybrook.edu
 MONGODB_PORT=27017
+
+if [[ -z "${CANCER_TYPE}" ]]; then
+	CANCER_TYPE=undefined
+fi
 
 if [[ -z "${HEATMAP_VERSION}" ]]; then
 	HEATMAP_VERSION=cancer_BC_v2
@@ -34,6 +37,8 @@ else
 		MODEL='RESNET_34_cancer_350px_lr_1e-2_decay_5_jitter_val6slides_harder_pretrained_none_1117_0044_0.8715164676076728_17.t7'
 	fi     
 fi
+
+CNN_MODEL=${MODEL}
 
 # Paths of data, log, input, and output
 JSON_OUTPUT_FOLDER=${HOST_DIR}/output/heatmap_jsons

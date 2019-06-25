@@ -5,7 +5,7 @@ RUN		apt-get -y update
 RUN		pip install --upgrade pip && \
 		conda install --yes pytorch=0.4.1 cuda90 -c pytorch && \
 		conda install --yes scikit-learn && \
-		pip install Pillow && \
+		pip install Pillow pymongo && \
 		pip install torchvision==0.2.1 && \
 		apt-get install --yes python3-openslide wget zip libgl1-mesa-glx libgl1-mesa-dev && \
 		pip install openslide-python && \

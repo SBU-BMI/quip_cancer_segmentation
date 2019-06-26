@@ -14,9 +14,9 @@ Create folder named "data" and subfoders below on the host machine:
 
 - data/svs: to contains *.svs files
 - data/patches: to contain output from patch extraction
-- data/log: to contain log files
-- data/heatmap_txt: to contain prediction output
-- data/heatmap_jsons: to contain prediction output as json files
+- data/output/log: to contain log files
+- data/output/heatmap_txt: to contain prediction output
+- data/output/heatmap_jsons: to contain prediction output as json files
 
 ## Step 2:
 - Run the docker container as follows: 

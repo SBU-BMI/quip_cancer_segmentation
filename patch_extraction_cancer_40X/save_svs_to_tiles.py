@@ -60,7 +60,9 @@ for x in range(1, width, pw):
             pw_y = height - y;
         else:
             pw_y = pw;
-        corrs.append((x, y, pw_x, pw_y))
+        
+        if int(patch_size_40X * pw_x / pw) > 50 and int(patch_size_40X * pw_y / pw) > 50:
+            corrs.append((x, y, pw_x, pw_y))
 
 def extract_patch(corr):
     x, y, pw_x, pw_y = corr

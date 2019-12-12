@@ -17,4 +17,8 @@ rm ${HEATMAP_TXT_OUTPUT_FOLDER}/*
 cp ./patch-level-merged/* ${HEATMAP_TXT_OUTPUT_FOLDER}/     #/data/heatmap_txt
 cp ./patch-level-color/* ${HEATMAP_TXT_OUTPUT_FOLDER}/      #/data/heatmap_txt
 
+# Generate meta and heatmap files for high-res and low-res heatmaps.
+bash gen_all_json.sh &> ${LOG_OUTPUT_FOLDER}/log.gen_all_json.txt
+cp ./json/* ${JSON_OUTPUT_FOLDER}/
+
 exit 0

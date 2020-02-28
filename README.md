@@ -13,6 +13,7 @@ A Docker image is available at: [pytorch docker](https://cloud.docker.com/reposi
 ## Step 1:
 Create folder named "data" and subfoders below:
 
+- change the BASE_DIR setting in conf/variables.sh to the path of your working directory
 - data/svs: to contains *.svs files
 - data/training_data: to contain training data
 - data/patches: to contain output from patch extraction

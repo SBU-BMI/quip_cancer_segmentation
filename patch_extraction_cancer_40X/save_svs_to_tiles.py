@@ -17,8 +17,8 @@ level = 0
 
 if not os.path.exists(sys.argv[3]): os.mkdir(sys.argv[3])
 
-start = time.time()
-time.sleep(random.randint(100, 1000)/100.0)  # wait for 1 --> 10s to avoid concurrency
+#start = time.time()
+#time.sleep(random.randint(100, 1000)/100.0)  # wait for 1 --> 10s to avoid concurrency
 
 fdone = '{}/extraction_done.txt'.format(output_folder);
 if os.path.isfile(fdone):

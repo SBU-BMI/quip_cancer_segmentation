@@ -6,10 +6,11 @@
 #BSUB -e ./logs/log.brca_patch_extraction.e%J
 #BSUB -W 02:00
 #BSUB -B
+#BSUB -alloc_flags "smt4"
 #BSUB -nnodes 1
 
 source ./0_user_input.sh
 
 cd ${CODE_DIR}/patch_extraction_cancer_40X
-jsrun -n 1 -a 1 -c 7 -g 0 ./start.sh
+jsrun -n 1 -a 1 -c 32 -g 0 ./start.sh
 # Batch job script — END

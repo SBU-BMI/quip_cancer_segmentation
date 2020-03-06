@@ -1,0 +1,15 @@
+
+Inactive Modules:
+  1) spectrum-mpi
+
+
+Activating Modules:
+  1) spectrum-mpi/10.3.0.1-20190611
+
+mkdir: cannot create directory '/gpfs/alpine/med108/proj-shared/hdle/quip_cancer_segmentation/_jobs_summit': File exists
+mkdir: cannot create directory 'data': File exists
+mkdir: cannot create directory 'patches': File exists
+mkdir: cannot create directory 'log': File exists
+mkdir: cannot create directory 'heatmap_txt': File exists
+mkdir: cannot create directory 'heatmap_jsons': File exists
+Could not read jskill result from pmix server

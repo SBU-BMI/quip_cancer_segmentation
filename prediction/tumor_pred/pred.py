@@ -56,6 +56,7 @@ mu, sigma = mean_std(type)
 #sigma = [0.5, 0.5, 0.5]
 
 device = torch.device("cuda")
+print("Using GPU: ", torch.cuda.is_available())
 data_aug = transforms.Compose([
     transforms.Scale(PS),
     transforms.ToTensor(),
@@ -211,7 +212,7 @@ def parallelize_model(model):
     if torch.cuda.is_available():
         model = model.to(device)
         # model = torch.nn.DataParallel(model, device_ids=range(torch.cuda.device_count()))
-        model = torch.nn.DataParallel(model, device_ids=[5,6,7])
+        model = torch.nn.DataParallel(model, device_ids=[0,1])
         cudnn.benchmark = True
         return model
 def unparallelize_model(model):
@@ -234,6 +235,8 @@ print("| Load pretrained at  %s..." % old_model)
 checkpoint = torch.load(old_model, map_location=lambda storage, loc: storage)
 model = checkpoint['model']
 model = unparallelize_model(model)
+#model = parallelize_model(model)
+
 model.to(device)
 model.train(False)
 best_auc = checkpoint['auc']

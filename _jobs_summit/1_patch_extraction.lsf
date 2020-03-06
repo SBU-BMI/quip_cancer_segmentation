@@ -1,0 +1,15 @@
+# Batch job script — START
+#!/bin/bash -x
+#BSUB -P med108
+#BSUB -J brca_patch_extraction
+#BSUB -o ./logs/log.brca_patch_extraction.o%J
+#BSUB -e ./logs/log.brca_patch_extraction.e%J
+#BSUB -W 02:00
+#BSUB -B
+#BSUB -nnodes 1
+
+source ./0_user_input.sh
+
+cd ${CODE_DIR}/patch_extraction_cancer_40X
+jsrun -n 1 -a 1 -c 7 -g 0 ./start.sh
+# Batch job script — END

@@ -3,7 +3,6 @@
 source ../../conf/variables.sh
 
 FOLDER=$1
-# PARAL = [0, MAX_PARAL-1]
 PARAL=$2
 MAX_PARAL=$3
 DEVICE=$4

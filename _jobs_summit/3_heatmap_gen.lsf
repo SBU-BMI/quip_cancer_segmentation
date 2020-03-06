@@ -1,0 +1,15 @@
+# Batch job script — START
+#!/bin/bash -x
+#BSUB -P med108
+#BSUB -J brca_heatmap_gen
+#BSUB -o ./logs/log.brca_heatmap_gen.o%J
+#BSUB -e ./logs/log.brca_heatmap_gen.e%J
+#BSUB -W 02:00
+#BSUB -B
+#BSUB -nnodes 1
+
+source ./0_user_input.sh
+
+cd ${CODE_DIR}/heatmap_gen
+jsrun -n 1 -a 1 -c 7 -g 0 ./start.sh
+# Batch job script — END

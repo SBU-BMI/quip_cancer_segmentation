@@ -12,12 +12,12 @@ import random
 
 slide_name = sys.argv[2] + '/' + sys.argv[1];
 output_folder = sys.argv[3] + '/' + sys.argv[1];
-patch_size_40X = 2100;      # 350*8 --> 8*8 smaller non-overlap patches (350x350)
+patch_size_40X = 1400;      # 350x350 pixels tiles
 level = 0
 
 if not os.path.exists(sys.argv[3]): os.mkdir(sys.argv[3])
 
-#start = time.time()
+start = time.time()
 #time.sleep(random.randint(100, 1000)/100.0)  # wait for 1 --> 10s to avoid concurrency
 
 fdone = '{}/extraction_done.txt'.format(output_folder);
@@ -85,7 +85,7 @@ def extract_patch(corr):
     patch.save(fname);
 
 print(slide_name, len(corrs))
-pool = mp.Pool(processes=4)
+pool = mp.Pool(processes=8)
 pool.map(extract_patch, corrs)
 
 print('Elapsed time: ', (time.time() - start)/60.0)

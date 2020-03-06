@@ -1,5 +1,6 @@
 #!/bin/bash
 
+pwd
 source ../conf/variables.sh
 
 nohup bash save_svs_to_tiles.sh 0 4 &> ${LOG_OUTPUT_FOLDER}/log.save_svs_to_tiles.thread_0.txt &

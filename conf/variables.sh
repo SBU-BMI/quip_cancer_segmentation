@@ -9,7 +9,7 @@ MONGODB_PORT=27017
 HEATMAP_VERSION=cancer_BC_v2
 
 # Base directory
-BASE_DIR=/data10/shared/hanle/quip_cancer_segmentation  # change this to your current working path
+BASE_DIR=/gpfs/alpine/med108/proj-shared/hdle/quip_cancer_segmentation
 
 # The list of case_ids you want to download heaetmaps from
 CASE_LIST=${BASE_DIR}/data/raw_marking_to_download_case_list/case_list.txt
@@ -35,7 +35,7 @@ THRESHOLDED_HEATMAPS_PATH=${BASE_DIR}/data/thresholded_heatmaps
 PATCH_FROM_HEATMAP_PATH=${BASE_DIR}/data/patches_from_heatmap
 THRESHOLD_LIST=${BASE_DIR}/data/threshold_list/threshold_list.txt
 
-LYM_NECRO_CNN_MODEL_PATH=${BASE_DIR}/data/models_cnn
+LYM_NECRO_CNN_MODEL_PATH=${BASE_DIR}/models_cnn
 LYM_CNN_TRAINING_DATA=${BASE_DIR}/data/training_data_cnn
 LYM_CNN_TRAINING_DEVICE=0
 LYM_CNN_PRED_DEVICE=0

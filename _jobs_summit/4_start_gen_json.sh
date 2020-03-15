@@ -2,6 +2,9 @@
 
 NUM_RUNS=$1
 
+source ./0_user_input.sh
+rm ${CODE_DIR}/data/log/log.gen_json.txt
+
 for (( i=1; i<=${NUM_RUNS}; i++ ))
 do
     TMP="tmp.lsf"
@@ -17,7 +20,7 @@ do
     echo "source ./0_activate_environment.sh" >> ${TMP}
     echo "source ./0_user_input.sh" >> ${TMP}
     echo "cd \${CODE_DIR}/heatmap_gen" >> ${TMP}
-    echo "jsrun -n 1 -a 1 -c 16 -g 0 -b rs ./start_gen_json.sh" >> ${TMP}
+    echo "jsrun -n 4 -a 1 -c 4 -g 0 -b rs ./start_gen_json.sh" >> ${TMP}
 
     bsub ${TMP}
     rm -f ${TMP}

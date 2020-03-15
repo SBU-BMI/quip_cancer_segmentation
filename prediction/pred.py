@@ -226,11 +226,15 @@ if os.path.exists(pred_file):
     print('Slide done prediction: ', pred_file)
     exit(0)
 
-print('start predicting...')
+if os.path.exists(old_model):
+    print('Model file not exists: ', old_model)
+    exit(1)
+
 start = time.time()
 
 #old_model = '/data01/shared/hanle/tumor_project/train_tumor_classification/tumor_cnn/checkpoint/RESNET_34_cancer_350px_lr_1e-2_decay_5_jitter_val6slides_harder_pretrained_cancer_tils_none_1117_1811_0.9157633018398808_9.t7'
 
+print('Start processsing slide: ', TileFolder)
 print("| Load pretrained at  %s..." % old_model)
 checkpoint = torch.load(old_model, map_location=lambda storage, loc: storage)
 model = checkpoint['model']

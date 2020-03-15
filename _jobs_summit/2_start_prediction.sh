@@ -1,12 +1,10 @@
 #!/bin/bash
 
 NUM_RUNS=$1
-CURRENT_FOL=$PWD
-source ./0_setup_softlinks.sh
+source ./0_user_input.sh
 rm ${CODE_DIR}/data/log/log.color.txt
 rm ${CODE_DIR}/data/log/log.cnn.txt
 rm ${CODE_DIR}/data/log/log.prediction.txt
-cd ${CURRENT_FOL}
 
 for (( i=1; i<=${NUM_RUNS}; i++ ))
 do

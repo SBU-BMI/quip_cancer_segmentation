@@ -226,7 +226,7 @@ if os.path.exists(pred_file):
     print('Slide done prediction: ', pred_file)
     exit(0)
 
-if os.path.exists(old_model):
+if not os.path.exists(old_model):
     print('Model file not exists: ', old_model)
     exit(1)
 

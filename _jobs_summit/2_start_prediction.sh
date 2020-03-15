@@ -28,4 +28,3 @@ do
     bsub ${TMP}
     rm -f ${TMP}
 done
-

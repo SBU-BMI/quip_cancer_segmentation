@@ -2,6 +2,7 @@
 
 source ../conf/variables.sh
 
-# Generate meta and heatmap files for high-res and low-res heatmaps.
-bash gen_all_json.sh &> ${LOG_OUTPUT_FOLDER}/log.gen_all_json.txt
-cp ./json/* ${JSON_OUTPUT_FOLDER}/
+echo ${HEATMAP_TXT_OUTPUT_FOLDER}
+# Generate meta and heatmap files
+nohup python -u start_gen_json.py ${HEATMAP_TXT_OUTPUT_FOLDER} ${SVS_INPUT_PATH} ${HEATMAP_VERSION} ${LOG_OUTPUT_FOLDER} > ${LOG_OUTPUT_FOLDER}/log.start_gen_json.txt &
+

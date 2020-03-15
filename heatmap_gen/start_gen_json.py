@@ -2,6 +2,7 @@ import os
 import sys
 import time
 import random
+import traceback
 
 def touch_file(fn):
     os.system('touch ' + fn)
@@ -66,9 +67,9 @@ if __name__ == '__main__':
 
         svs_done = set(list_files(done_fol))
         svs_processing = set(list_files(processing_fol))
-        svs_all = set([f.split('prediction-')[1] for f in list_files(IN_FOLDER, 'prediction-')])
+        svs_all = set([f.split('prediction-')[-1] for f in list_files(IN_FOLDER, 'prediction-')])
         svs_remaining = svs_all.difference(svs_done.union(svs_processing))
-        print('done:{}, processing:{}, all:{}, remaining:{}'.format(len(svs_done), len(svs_processing), len(svs_all), len(svs_remaining)))
+        print('{} - done:{}, processing:{}, all:{}, remaining:{}'.format(time.ctime(), len(svs_done), len(svs_processing), len(svs_all), len(svs_remaining)))
         if len(svs_remaining) == 0:
             exit(0)
 
@@ -84,7 +85,8 @@ if __name__ == '__main__':
             return_code = os.system(cmd)
             assert return_code == 0     # raise exception if code failed to run
         except:
-            os.system('echo {} >> {}'.format('Failed extracting patches for: ' + slide_name, log_path))
+            os.system('echo {} >> {}'.format('Failed generating json file for for: ' + slide_name, log_path))
+            traceback.print_exc(file=sys.stdout)
 
         touch_file(os.path.join(done_fol, slide_name))
         rm_file(os.path.join(processing_fol, slide_name))

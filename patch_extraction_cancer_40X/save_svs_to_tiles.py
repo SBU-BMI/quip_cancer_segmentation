@@ -9,17 +9,44 @@ import cv2
 from shutil import copyfile as cp
 import multiprocessing as mp
 import random
+import pickle
+import deepdish as dd
+import traceback
+
+def extract_patch(corr):
+    x, y, pw_x, pw_y = corr
+
+    fname = '{}/{}_{}_{}_{}.png'.format(output_folder, x, y, pw, patch_size_40X)
+    #fname = 'a{}_{}_{}_{}'.format(x, y, pw, patch_size_40X)
+
+    patch = oslide.read_region((x, y), 0, (pw_x, pw_y));
+    patch = patch.resize((int(patch_size_40X * pw_x / pw), int(patch_size_40X * pw_y / pw)), Image.ANTIALIAS);
+
+    #shahira: skip where the alpha channel is zero
+    patch_arr = np.array(patch);
+    if(patch_arr[:,:,3].max() == 0):    # this is blank regions
+        return None, None
+    #patch_arr = patch_arr.astype(np.uint8)
+
+    patch.save(fname);
+    return fname, patch_arr[:,:,:3]
+
+def store_file(out, i):
+    out_pkl = {}
+    for fn, patch in out:
+        if fn is None: continue
+        out_pkl[fn] = patch
+    dd.io.save("{}/{}_{}.h5".format(output_folder, output_folder.split('/')[-1], i), out_pkl, ('blosc', 8))
+
 
 slide_name = sys.argv[2] + '/' + sys.argv[1];
 output_folder = sys.argv[3] + '/' + sys.argv[1];
-patch_size_40X = 1400;      # 350x350 pixels tiles
+patch_size_40X = 2800;      # 350x350 pixels tiles
 level = 0
 
 if not os.path.exists(sys.argv[3]): os.mkdir(sys.argv[3])
 
 start = time.time()
-#time.sleep(random.randint(100, 1000)/100.0)  # wait for 1 --> 10s to avoid concurrency
-
 fdone = '{}/extraction_done.txt'.format(output_folder);
 if os.path.isfile(fdone):
     print('fdone {} exist, skipping'.format(fdone));
@@ -50,10 +77,10 @@ try:
     width = oslide.dimensions[0];
     height = oslide.dimensions[1];
 except:
-    print('{}: exception caught'.format(slide_name));
+    print('{}: exception caught --------------------------'.format(slide_name));
+    traceback.print_exc(file=sys.stdout)
+    print('--------------------------------')
     exit(1);
-
-print('height/width: {}/{}'.format(height, width))
 
 corrs = []
 for x in range(1, width, pw):
@@ -67,26 +94,19 @@ for x in range(1, width, pw):
             pw_y = height - y;
         else:
             pw_y = pw;
-        
+
         if int(patch_size_40X * pw_x / pw) > 50 and int(patch_size_40X * pw_y / pw) > 50:
             corrs.append((x, y, pw_x, pw_y))
 
-def extract_patch(corr):
-    x, y, pw_x, pw_y = corr
+num_processes = 32
+num_corrs_per_file = 128
+for i in range(int(len(corrs)/num_corrs_per_file) + 1):
+    pool = mp.Pool(processes=num_processes)
+    pool.map(extract_patch, corrs[i*num_corrs_per_file:(i + 1)*num_corrs_per_file])
+    #store_file(out, i)
+    pool.close()
 
-    fname = '{}/{}_{}_{}_{}.png'.format(output_folder, x, y, pw, patch_size_40X)
-
-    patch = oslide.read_region((x, y), 0, (pw_x, pw_y));
-    #shahira: skip where the alpha channel is zero
-    patch_arr = np.array(patch);
-    if(patch_arr[:,:,3].max() == 0):    # this is blank regions
-        return
-    patch = patch.resize((int(patch_size_40X * pw_x / pw), int(patch_size_40X * pw_y / pw)), Image.ANTIALIAS);
-    patch.save(fname);
-
-print(slide_name, len(corrs))
-pool = mp.Pool(processes=8)
-pool.map(extract_patch, corrs)
-
-print('Elapsed time: ', (time.time() - start)/60.0)
+print(time.ctime())
+print('{}- height: {}; width: {}, num_corrs: {}'.format(slide_name, height, width, len(corrs)))
+print('{}- {} processes, {} imgs per file; time: {}\n'.format(slide_name, num_processes, num_corrs_per_file, (time.time() - start)/60.0))
 

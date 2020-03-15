@@ -15,7 +15,8 @@ BASE_DIR=/gpfs/alpine/med108/proj-shared/hdle/quip_cancer_segmentation
 CASE_LIST=${BASE_DIR}/data/raw_marking_to_download_case_list/case_list.txt
 DATA_PATH=${BASE_DIR}/data/training_data        # Change this to your training data folder
 DATA_LIST='tumor_data_list_toy.txt'        # Text file to contain subfolders for testing (1st line), training (the rest)
-MODEL='RESNET_34_cancer_350px_lr_1e-2_decay_5_jitter_val6slides_harder_pretrained_none_1117_0044_0.8715164676076728_17.t7'     # model is saved in data/models_cnn
+LYM_NECRO_CNN_MODEL_PATH=${BASE_DIR}/models_cnn
+MODEL=${LYM_NECRO_CNN_MODEL_PATH}/RESNET_34_cancer_350px_lr_1e-2_decay_5_jitter_val6slides_harder_pretrained_none_1117_0044_0.8715164676076728_17.t7     # model is saved in data/models_cnn
 
 
 # Paths of data, log, input, and output
@@ -35,7 +36,6 @@ THRESHOLDED_HEATMAPS_PATH=${BASE_DIR}/data/thresholded_heatmaps
 PATCH_FROM_HEATMAP_PATH=${BASE_DIR}/data/patches_from_heatmap
 THRESHOLD_LIST=${BASE_DIR}/data/threshold_list/threshold_list.txt
 
-LYM_NECRO_CNN_MODEL_PATH=${BASE_DIR}/models_cnn
 LYM_CNN_TRAINING_DATA=${BASE_DIR}/data/training_data_cnn
 LYM_CNN_TRAINING_DEVICE=0
 LYM_CNN_PRED_DEVICE=0

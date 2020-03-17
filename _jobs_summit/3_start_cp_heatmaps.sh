@@ -3,9 +3,9 @@
 TMP="tmp.lsf"
 echo "#!/bin/bash -x" > ${TMP}
 echo "#BSUB -P med108" >> ${TMP}
-echo "#BSUB -J brca_prediction_${i}" >> ${TMP}
-echo "#BSUB -o ./logs/log.brca_prediction.o%J" >> ${TMP}
-echo "#BSUB -e ./logs/log.brca_prediction.e%J" >> ${TMP}
+echo "#BSUB -J brca_cp_heatmap" >> ${TMP}
+echo "#BSUB -o ./logs/log.brca_cp_heatmap.o%J" >> ${TMP}
+echo "#BSUB -e ./logs/log.brca_cp_heatmap.e%J" >> ${TMP}
 echo "#BSUB -W 02:00" >> ${TMP}
 echo "#BSUB -B" >> ${TMP}
 echo "#BSUB -alloc_flags \"smt4\"" >> ${TMP}

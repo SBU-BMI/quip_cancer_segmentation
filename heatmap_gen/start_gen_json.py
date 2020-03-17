@@ -79,13 +79,14 @@ if __name__ == '__main__':
         random.shuffle(svs_remaining)
         slide_name = svs_remaining[0]
         log_path = os.path.join(LOG_OUTPUT_FOLDER, 'log.gen_json.txt')
+        cmd = 'python -u gen_json_multipleheat.py {} {} {} lym 0.5 necrosis 0.5 >> {}'.format(os.path.join(IN_FOLDER, 'prediction-' + slide_name), HEATMAP_VERSION, SVS_INPUT_PATH, log_path)
         try:
             touch_file(os.path.join(processing_fol, slide_name))
-            cmd = 'python -u gen_json_multipleheat.py {} {} {} lym 0.5 necrosis 0.5 >> {}'.format(os.path.join(IN_FOLDER, 'prediction-' + slide_name), HEATMAP_VERSION, SVS_INPUT_PATH, log_path)
             return_code = os.system(cmd)
             assert return_code == 0     # raise exception if code failed to run
         except:
-            os.system('echo {} >> {}'.format('Failed generating json file for for: ' + slide_name, log_path))
+            os.system('echo {} >> {}'.format('Failed generating json file for: ' + slide_name, log_path))
+            print(cmd)
             traceback.print_exc(file=sys.stdout)
 
         touch_file(os.path.join(done_fol, slide_name))

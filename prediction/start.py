@@ -39,6 +39,7 @@ def clean_done_fol(done_fol, out_fol, *indicator_files):
     for fn in done_fns:
         if not all([is_path_exists(out_fol, fn, indicator_file) for indicator_file in indicator_files]):
             rm_file(os.path.join(done_fol, fn))
+
     for fn in out_fns:
         if all([is_path_exists(out_fol, fn, indicator_file) for indicator_file in indicator_files]) and not is_path_exists(done_fol, fn):
             touch_file(os.path.join(done_fol, fn))
@@ -60,6 +61,7 @@ if __name__ == '__main__':
     time.sleep(random.randint(100, 1000)/100.0)  # wait for 1 --> 10s to avoid concurrency
     start_time = time.time()
     while(1):
+        clean_files(processing_fol, 60)
         elapsed_time = time.time() - start_time
         if elapsed_time > 100*60: # require at least 20mins left to start processing a new WSI
             exit(0)
@@ -69,20 +71,21 @@ if __name__ == '__main__':
         svs_extracting = set(list_files(IN_FOLDER))
         svs_extracted = set([fn for fn in list_files(IN_FOLDER) if is_path_exists(IN_FOLDER, fn, indicator_file)])
         svs_remaining = svs_extracted.difference(svs_done.union(svs_processing))
-        print('len of done: {}, processing: {}, extracing: {}, extracted: {}, remaining slides: {}'.format(len(svs_done), len(svs_processing), len(svs_extracting), len(svs_extracted), len(svs_remaining)))
-        if len(svs_extracting) == len(svs_extracted):
+        print('{}- len of done: {}, processing: {}, extracing: {}, extracted: {}, remaining slides: {}'.format(time.ctime(), len(svs_done), len(svs_processing), len(svs_extracting), len(svs_extracted), len(svs_remaining)))
+
+        if len(svs_done) + len(svs_processing) >= len(svs_extracting):
+            print(time.ctime(), '- Done prediction')
             exit(0)
 
         if len(svs_remaining) == 0:
-            time.sleep(10)
+            time.sleep(30)
+            print(time.ctime(), '- waiting for new WSI...')
             continue
-
-        clean_files(processing_fol, 60)
 
         svs_remaining = list(svs_remaining)
         random.shuffle(svs_remaining)
         slide_name = svs_remaining[0]
-        print('Start processing slide: ', slide_name)
+        print(time.ctime(), '- Start processing slide: ', slide_name)
         log_cnn = os.path.join(LOG_OUTPUT_FOLDER, 'log.cnn.txt')
         log_color = os.path.join(LOG_OUTPUT_FOLDER, 'log.color.txt')
         try:
@@ -94,11 +97,15 @@ if __name__ == '__main__':
 
             color_code = os.system(cmd_color)
             cnn_code = os.system(cmd_cnn)
+
             print(color_code, cnn_code)
             assert color_code == 0
             assert cnn_code == 0
         except:
-            os.system('echo {} >> {}'.format('----------Failed prediction for: ' + slide_name, log_path))
+            if color_code:
+                os.system('echo {} >> {}'.format('----------Failed compute color for: ' + slide_name, log_color))
+            if cnn_code:
+                os.system('echo {} >> {}'.format('----------Failed prediction for: ' + slide_name, log_cnn))
             traceback.print_exc(file=sys.stdout)
 
         touch_file(os.path.join(done_fol, slide_name))

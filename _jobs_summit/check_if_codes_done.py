@@ -25,5 +25,5 @@ print('Copy heatmap_txt: number WSIs predicted: {}; number heatmap_txt copied: {
 print('Generate heatmap_json: number heatmap_txt: {}; number jsons: {}'.format(len(heatmap_txt), len(heatmap_json)))
 
 print('\nRemaining WSIs not extracted: ', svs_files.difference(svs_extracted))
-print('Remaining WSIs not predicted: ', svs_extracted.difference(prediction))
+print('\nRemaining WSIs not predicted: ', svs_extracted.difference(prediction))
 

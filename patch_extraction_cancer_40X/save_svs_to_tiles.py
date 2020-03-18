@@ -9,8 +9,6 @@ import cv2
 from shutil import copyfile as cp
 import multiprocessing as mp
 import random
-import pickle
-import deepdish as dd
 import traceback
 
 def extract_patch(corr):
@@ -30,14 +28,6 @@ def extract_patch(corr):
 
     patch.save(fname);
     return fname, patch_arr[:,:,:3]
-
-def store_file(out, i):
-    out_pkl = {}
-    for fn, patch in out:
-        if fn is None: continue
-        out_pkl[fn] = patch
-    dd.io.save("{}/{}_{}.h5".format(output_folder, output_folder.split('/')[-1], i), out_pkl, ('blosc', 8))
-
 
 slide_name = sys.argv[2] + '/' + sys.argv[1];
 output_folder = sys.argv[3] + '/' + sys.argv[1];
@@ -98,13 +88,10 @@ for x in range(1, width, pw):
         if int(patch_size_40X * pw_x / pw) > 50 and int(patch_size_40X * pw_y / pw) > 50:
             corrs.append((x, y, pw_x, pw_y))
 
-num_processes = 32
-num_corrs_per_file = 128
-for i in range(int(len(corrs)/num_corrs_per_file) + 1):
-    pool = mp.Pool(processes=num_processes)
-    pool.map(extract_patch, corrs[i*num_corrs_per_file:(i + 1)*num_corrs_per_file])
-    #store_file(out, i)
-    pool.close()
+num_processes = 64
+pool = mp.Pool(processes=num_processes)
+pool.map(extract_patch, corrs)
+pool.close()
 
 print(time.ctime())
 print('{}- height: {}; width: {}, num_corrs: {}'.format(slide_name, height, width, len(corrs)))

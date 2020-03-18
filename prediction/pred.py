@@ -24,8 +24,9 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True
 APS = 350;
 PS = 224
 TileFolder = sys.argv[1] + '/';
+slide_id = TileFolder.split('/')[-1]
 
-BatchSize = 96;
+BatchSize = 128*6;
 
 #CNNModel = sys.argv[2] + '/cnn_lym_model.pkl';
 heat_map_out = sys.argv[3];
@@ -55,7 +56,7 @@ type = 'none'
 mu, sigma = mean_std(type)
 
 device = torch.device("cuda")
-print("Using GPU: ", torch.cuda.is_available())
+print(slide_id + "- Using GPU: ", torch.cuda.is_available())
 data_aug = transforms.Compose([
     transforms.Scale(PS),
     transforms.ToTensor(),
@@ -112,7 +113,7 @@ def load_data(todo_list, rind):
             svs_pw = float(fn.split('_')[2]);
             png_pw = float(fn.split('_')[3].split('.png')[0]);
         except:
-            print('error reading image')
+            print(slide_id + '- error reading image')
             continue
 
         png = np.array(Image.open(full_fn).convert('RGB'));
@@ -136,7 +137,7 @@ def load_data(todo_list, rind):
 
                 cind += 1;
                 rind += 1;
-                if rind % 100 == 0: print('Processed: ', rind)
+                if rind % 5000 == 0: print(slide_id + '- Processed: ', rind)
         if xind >= BatchSize:
             break;
 
@@ -174,10 +175,10 @@ def val_fn_epoch_on_disk(classn, val_fn):
         #    print('len of inputs is 0"')
         #    break;
         if inputs.size(0) < 2:
-            print('len of inputs if less than 2')
+            print(slide_id + '- len of inputs if less than 2')
         else:
             processed = total - len(todo_list)
-            print('Processed: {}/{} \t Time Remaining: {}mins'.format(processed, total, (time.time() - start)/60*(total/processed - 1)))
+            print(slide_id + '- Processed: {}/{} \t Time Remaining: {}mins'.format(processed, total, (time.time() - start)/60*(total/processed - 1)))
             with torch.no_grad():
                 inputs = Variable(inputs.to(device))
                 output = val_fn(inputs)
@@ -210,7 +211,7 @@ def auc_roc(Pr, Tr):
 def parallelize_model(model):
     if torch.cuda.is_available():
         model = model.to(device)
-        model = torch.nn.DataParallel(model, device_ids=[0,1])
+        model = torch.nn.DataParallel(model, device_ids=[0,1,2,3,4,5])
         cudnn.benchmark = True
         return model
 
@@ -236,7 +237,7 @@ start = time.time()
 
 #old_model = '/data01/shared/hanle/tumor_project/train_tumor_classification/tumor_cnn/checkpoint/RESNET_34_cancer_350px_lr_1e-2_decay_5_jitter_val6slides_harder_pretrained_cancer_tils_none_1117_1811_0.9157633018398808_9.t7'
 
-print("| Load pretrained at  %s..." % old_model)
+print(slide_id + "- | Load pretrained at  %s..." % old_model)
 checkpoint = torch.load(old_model, map_location=lambda storage, loc: storage)
 model = checkpoint['model']
 model = unparallelize_model(model)
@@ -245,7 +246,7 @@ model = parallelize_model(model)
 model.to(device)
 model.train(False)
 best_auc = checkpoint['auc']
-print('previous best AUC: \t%.4f'% best_auc)
+print(slide_id + '- previous best AUC: \t%.4f'% best_auc)
 print('=============================================')
 
 Or, inds, coor = val_fn_epoch_on_disk(1, model);

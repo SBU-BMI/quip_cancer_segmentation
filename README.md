@@ -11,19 +11,22 @@ The default settings are for Resnet-34 since it performs the best on the public 
     - SVS_DIR contains the WSIs that you want to process
     - OUT_DIR contains the results (a folder named "data" will be automatically created inside OUT_DIR).
     - If OUT_DIR does not exists, the script will create a new foder named OUT_DIR
-- Run "bash 1_start_patch_extraction.sh ${number_of_jobs}" to start patch extraction. We can submit multiple jobs that will be processed in parallel. ${number_of_jobs} is less than 100 (Summit limit per user).
-- Run "bash 2_start_prediction.sh ${number_of_jobs}" to start the prediction. ${number_of_jobs} is set similar as above.
-- Run "bash 3_start_cp_heatmaps.sh" to copy heatmap_txt from different folders to a same folder.
-- Run "bash 4_start_gen_json.sh ${number_of_jobs}" to start generating json files. ${number_of_jobs} is set similar as above.
+- Run "bash 1_start_setup_softlinks_folders.sh" to setup softlinks, setup folders. Run this command first, only 1 time.
+- Run "bash 2_start_patch_extraction.sh ${number_of_jobs}" to start patch extraction. We can submit multiple jobs that will be processed in parallel. ${number_of_jobs} is less than 100 (Summit limit per user).
+- Run "bash 3_start_prediction.sh ${number_of_jobs}" to start the prediction. ${number_of_jobs} is set similar as above.
+- Run "bash 4_start_cp_heatmaps.sh" to copy heatmap_txt from different folders to a same folder.
+- Run "bash 5_start_gen_json.sh ${number_of_jobs}" to start generating json files. ${number_of_jobs} is set similar as above.
+- Run "bash 6_check_if_codes_done.sh" at anytime to check if the WSIs are done processing at any steps
 - Users can configure the job setting in the "jsrun" command inside each .sh file.
 
 ### Example of using scripts
+- "bash 1_start_setup_softlinks_folders.sh"
 - Run patch extraction and prediction in parallel, use 50 jobs for each. This number depends on availble resources on Summit. To see the availble resources, run "jobstat -u ${your_username}":
-    - "bash 1_start_patch_extraction.sh 50"
-    - "bash 2_start_prediction.sh 50"
+    - "bash 2_start_patch_extraction.sh 50"
+    - "bash 3_start_prediction.sh 50"
 - Wait for these 2 steps done running. Then proceed the next steps below sequentially. 
-- "bash 3_start_cp_heatmaps.sh"
-- "bash 4_start_gen_json.sh 20"
+- "bash 4_start_cp_heatmaps.sh"
+- "bash 5_start_gen_json.sh 20"
 
 
 # Citation

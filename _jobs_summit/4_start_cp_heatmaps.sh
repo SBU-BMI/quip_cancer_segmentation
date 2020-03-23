@@ -1,4 +1,5 @@
 #!/bin/bash
+touch '~/running_cp_heatmap.txt'
 
 TMP="tmp.lsf"
 echo "#!/bin/bash -x" > ${TMP}

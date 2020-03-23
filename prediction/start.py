@@ -63,7 +63,7 @@ if __name__ == '__main__':
     while(1):
         clean_files(processing_fol, 60)
         elapsed_time = time.time() - start_time
-        if elapsed_time > 100*60: # require at least 20mins left to start processing a new WSI
+        if elapsed_time > 80*60: # require at least 40mins left to start processing a new WSI
             exit(0)
 
         svs_done = set(list_files(done_fol))

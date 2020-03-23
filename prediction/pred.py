@@ -24,7 +24,7 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True
 APS = 350;
 PS = 224
 TileFolder = sys.argv[1] + '/';
-slide_id = TileFolder.split('/')[-1]
+slide_id = sys.argv[1].split('/')[-1]
 
 BatchSize = 128*6;
 

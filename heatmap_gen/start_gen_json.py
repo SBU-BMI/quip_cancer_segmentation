@@ -35,7 +35,9 @@ def is_path_exists(*args):
 
 def clean_done_fol(done_fol, out_fol):
     done_fns = set(list_files(done_fol))
-    out_fns = set([f.split('heatmap_')[-1].split('.json')[0] for f in list_files(out_fol, 'heatmap')])
+    heatmap_fns = set([f.split('heatmap_')[-1].split('.json')[0] for f in list_files(out_fol, 'heatmap')])
+    meta_fns = set([f.split('meta_')[-1].split('.json')[0] for f in list_files(out_fol, 'meta')])
+    out_fns = heatmap_fns.intersection(meta_fns)
     for fn in done_fns:
         if fn not in out_fns:
             rm_file(os.path.join(done_fol, fn))

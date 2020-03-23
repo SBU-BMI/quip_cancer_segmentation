@@ -24,4 +24,6 @@ for files in ${FOLDER}/*/${PRED_VERSION}; do
     cp ${files} ${DIS_FOLDER}/${dis}
 done
 
+rm '~/running_cp_heatmap.txt'
+
 exit 0

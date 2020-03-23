@@ -6,6 +6,8 @@ source 0_user_input.sh
 rm ${CODE_DIR}/data/log/log.save_svs_to_tiles.txt
 cd ${CURRENT_FOL}
 
+touch logs/run_patch_extraction.txt
+
 for (( i=1; i<=${NUM_RUNS}; i++ ))
 do
     TMP="tmp.lsf"

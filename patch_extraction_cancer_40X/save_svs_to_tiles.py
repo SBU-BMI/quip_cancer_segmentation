@@ -93,7 +93,8 @@ pool = mp.Pool(processes=num_processes)
 pool.map(extract_patch, corrs)
 pool.close()
 
+print('\n=================================')
 print(time.ctime())
 print('{}- height: {}; width: {}, num_corrs: {}'.format(slide_name, height, width, len(corrs)))
-print('{}- {} processes, {} imgs per file; time: {}\n'.format(slide_name, num_processes, num_corrs_per_file, (time.time() - start)/60.0))
+print('{}- {} processes, time: {}\n'.format(slide_name, num_processes, (time.time() - start)/60.0))
 

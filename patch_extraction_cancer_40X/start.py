@@ -2,6 +2,7 @@ import os
 import sys
 import time
 import random
+import traceback
 
 def touch_file(fn):
     os.system('touch ' + fn)
@@ -74,6 +75,7 @@ if __name__ == '__main__':
         random.shuffle(svs_remaining)
         slide_name = svs_remaining[0]
         log_path = os.path.join(LOG_OUTPUT_FOLDER, 'log.save_svs_to_tiles.txt')
+        return_code = 0
         try:
             touch_file(os.path.join(processing_fol, slide_name))
             cmd = 'python -u save_svs_to_tiles.py {} {} {} >> {}'.format(slide_name, IN_FOLDER, OUT_FOLDER, log_path)
@@ -82,7 +84,9 @@ if __name__ == '__main__':
             touch_file(os.path.join(OUT_FOLDER, slide_name, indicator_file))
         except:
             os.system('echo {} >> {}'.format('Failed extracting patches for: ' + slide_name, log_path))
-            rm_folder(os.path.join(OUT_FOLDER, slide_name))
+            print('{} - Return code: {}'.format(slide_name, return_code))
+            traceback.print_exc(file=sys.stdout)
+            #rm_folder(os.path.join(OUT_FOLDER, slide_name))
 
         touch_file(os.path.join(done_fol, slide_name))
         rm_file(os.path.join(processing_fol, slide_name))

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 NUM_RUNS=$1
-source ./0_user_input.sh
+source 0_user_input.sh
 rm ${CODE_DIR}/data/log/log.color.txt
 rm ${CODE_DIR}/data/log/log.cnn.txt
 rm ${CODE_DIR}/data/log/log.prediction.txt
@@ -18,8 +18,8 @@ do
     echo "#BSUB -B" >> ${TMP}
     echo "#BSUB -alloc_flags \"smt4\"" >> ${TMP}
     echo "#BSUB -nnodes 1" >> ${TMP}
-    echo "source ./0_activate_environment.sh" >> ${TMP}
-    echo "source ./0_user_input.sh" >> ${TMP}
+    echo "source ./utils/0_activate_environment.sh" >> ${TMP}
+    echo "source 0_user_input.sh" >> ${TMP}
     echo "cd \${CODE_DIR}/prediction" >> ${TMP}
     echo "jsrun -n 1 -a 1 -c 42 -g 6 -l GPU-CPU -b rs ./start.sh" >> ${TMP}
 

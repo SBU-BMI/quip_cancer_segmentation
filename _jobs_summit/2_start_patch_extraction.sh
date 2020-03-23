@@ -2,7 +2,7 @@
 
 NUM_RUNS=$1
 CURRENT_FOL=$PWD
-source ./0_setup_softlinks.sh
+source 0_user_input.sh
 rm ${CODE_DIR}/data/log/log.save_svs_to_tiles.txt
 cd ${CURRENT_FOL}
 
@@ -18,8 +18,8 @@ do
     echo "#BSUB -B" >> ${TMP}
     echo "#BSUB -alloc_flags \"smt4\"" >> ${TMP}
     echo "#BSUB -nnodes 1" >> ${TMP}
-    echo "source ./0_activate_environment.sh" >> ${TMP}
-    echo "source ./0_user_input.sh" >> ${TMP}
+    echo "source ./utils/0_activate_environment.sh" >> ${TMP}
+    echo "source 0_user_input.sh" >> ${TMP}
     echo "cd \${CODE_DIR}/patch_extraction_cancer_40X" >> ${TMP}
     echo "jsrun -n 1 -a 1 -c 42 -g 0 -b rs ./start.sh" >> ${TMP}
 

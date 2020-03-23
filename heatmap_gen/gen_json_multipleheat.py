@@ -90,9 +90,13 @@ if 'low_res' not in filename:
     casename = casename.split('.intersected')[0]
 
 print("Casename ", casename);
-imgfilename = svs_img_folder + '/' + casename + '.svs';
+imgfilename = svs_img_folder + '/' + casename;
+if not os.path.isfile(imgfilename):
+    imgfilename = svs_img_folder + '/' + casename + '.svs';
 if not os.path.isfile(imgfilename):
     imgfilename = svs_img_folder + '/' + casename + '.tif';
+if not os.path.isfile(imgfilename):
+    imgfilename = svs_img_folder + '/' + casename + '.ndpi';
 if not os.path.isfile(imgfilename):
     print("{}/svs does not exist".format(imgfilename));
     print("Quit");

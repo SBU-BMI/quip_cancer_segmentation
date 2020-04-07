@@ -4,7 +4,7 @@ import numpy as np
 import time
 from PIL import Image
 
-APS = 350;
+APS = 200;
 TileFolder = sys.argv[1] + '/';
 heat_map_out = sys.argv[2];
 

@@ -21,8 +21,8 @@ from PIL import ImageFile
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 
-APS = 350;
-PS = 224
+APS = 200;
+PS = 200
 TileFolder = sys.argv[1] + '/';
 slide_id = sys.argv[1].split('/')[-1]
 
@@ -58,7 +58,7 @@ mu, sigma = mean_std(type)
 device = torch.device("cuda")
 print("{}- Using GPU: {}".format(slide_id, torch.cuda.is_available()))
 data_aug = transforms.Compose([
-    transforms.Scale(PS),
+    #transforms.Scale(PS),
     transforms.ToTensor(),
     transforms.Normalize(mu, sigma)])
 

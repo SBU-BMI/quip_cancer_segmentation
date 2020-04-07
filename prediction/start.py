@@ -49,7 +49,7 @@ if __name__ == '__main__':
     CNN_MODEL = sys.argv[2]
     LOG_OUTPUT_FOLDER = sys.argv[3]
     cnn_file='patch-level-cancer.txt'
-    color_file = 'patch-level-color.txt'
+    color_file = 'patch-level-color-cancer.txt'
     indicator_file = 'extraction_done.txt'
 
     done_fol = 'done'

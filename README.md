@@ -1,6 +1,6 @@
-# Running quip_cancer_segmentation on SUMMIT
+# Running TIL pipeline on SUMMIT
 
-IMPORTANT: Download the trained models [here](https://drive.google.com/open?id=1km7gVpBpLbBovExTgt3CE8JRwpTEl57F), extract 3 *.t7  files to ./models_cnn
+IMPORTANT: Download the trained models [here](https://drive.google.com/open?id=1UexpIxyq3uzDp_IgmY0uIDzaBioZ4otE), extract *.t7  file to ./models_cnn
 
 The default settings are for Resnet-34 since it performs the best on the public testset. To use other models, change the variable "MODEL" in conf/variables.sh to other models name downloaded from google drive above.
 

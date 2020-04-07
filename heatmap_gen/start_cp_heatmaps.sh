@@ -11,7 +11,7 @@ bash cp_heatmaps_all.sh ${PATCH_PATH} &> ${LOG_OUTPUT_FOLDER}/log.cp_heatmaps_al
 
 bash combine_lym_necrosis_all.sh &> ${LOG_OUTPUT_FOLDER}/log.combine_lym_necrosis_all.txt
 rm ${HEATMAP_TXT_OUTPUT_FOLDER}/*
-cp ./patch-level-merged/* ${HEATMAP_TXT_OUTPUT_FOLDER}/     #/data/heatmap_txt
-cp ./patch-level-color/* ${HEATMAP_TXT_OUTPUT_FOLDER}/      #/data/heatmap_txt
-
+mv ./patch-level-merged/* ${HEATMAP_TXT_OUTPUT_FOLDER}/     #/data/heatmap_txt
+mv ./patch-level-color/* ${HEATMAP_TXT_OUTPUT_FOLDER}/      #/data/heatmap_txt
+rm ./patch-level-lym/*
 exit 0

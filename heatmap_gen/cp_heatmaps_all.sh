@@ -2,7 +2,7 @@
 
 FOLDER=${1}     #/data/patches
 
-PRED_VERSION=patch-level-cancer.txt
+PRED_VERSION=patch-level-TIL.txt
 DIS_FOLDER=./patch-level-lym/
 for files in ${FOLDER}/*/${PRED_VERSION}; do
     dis=`echo ${files} | awk -F'/' '{print "prediction-"substr($(NF-1),1,length($(NF-1)));}'`

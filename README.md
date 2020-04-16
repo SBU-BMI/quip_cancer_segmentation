@@ -69,9 +69,9 @@ Create folder named "data" and subfoders below:
 
 # Citation
      @article{le2020utilizing,
-    title={Utilizing Automated Breast Cancer Detection to Identify Spatial Distributions of Tumor Infiltrating Lymphocytes in Invasive Breast Cancer},
-    author={Le, Han and Gupta, Rajarsi and Hou, Le and Abousamra, Shahira and Fassler, Danielle and Torre-Healy, Luke and Moffitt, Richard A and Kurc, Tahsin and Samaras, Dimitris and Batiste, Rebecca and others},
-    journal={The American Journal of Pathology},
-    year={2020},
-    publisher={Elsevier}
-  }
+       title={Utilizing Automated Breast Cancer Detection to Identify Spatial Distributions of Tumor Infiltrating Lymphocytes in Invasive Breast Cancer},
+       author={Le, Han and Gupta, Rajarsi and Hou, Le and Abousamra, Shahira and Fassler, Danielle and Torre-Healy, Luke and Moffitt, Richard A and Kurc, Tahsin and Samaras, Dimitris and Batiste, Rebecca and others},
+       journal={The American Journal of Pathology},
+       year={2020},
+       publisher={Elsevier}
+      }

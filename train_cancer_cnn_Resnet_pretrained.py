@@ -7,6 +7,7 @@ from sklearn.metrics import mean_squared_error, accuracy_score, hamming_loss, ro
 from tumor_utils import *
 import copy
 from torch.utils.data import DataLoader, Dataset
+import random
 
 parser = argparse.ArgumentParser(description='PyTorch Digital Mammography Training')
 parser.add_argument('--lr', default=1e-2, type=float, help='learning rate')
@@ -54,8 +55,6 @@ freq_print = 100     # print stats every {} batches
 training_data_path = '/data01/shared/hanle/tumor_project/breast_cancer_40X/cancer_pos1'
 dataset_list = os.path.join(training_data_path, 'tumor_data_list.txt')
 
-training_data_path = args.data
-dataset_list = args.data_list
 dataset_list = os.path.join(training_data_path, dataset_list)
 
 print(dataset_list)
@@ -104,6 +103,12 @@ data_transforms = {
 }
 
 img_trains, img_vals = load_imgs_files(classn, dataset_list = dataset_list, training_data_path = training_data_path, color = args.color)
+
+# for demo training, small number of training/val. Delete these when running real training
+random.shuffle(img_trains)
+random.shuffle(img_vals)
+img_trains, img_vals = img_trains[:10000], img_vals[:1000]
+# end of demo
 
 train_set = data_loader(img_trains, transform = data_transforms['train'])
 train_loader = DataLoader(train_set, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers, pin_memory=False)

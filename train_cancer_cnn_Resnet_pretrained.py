@@ -52,7 +52,7 @@ classn = 1
 freq_print = 100     # print stats every {} batches
 
 training_data_path = '/data01/shared/hanle/tumor_project/breast_cancer_40X/cancer_pos1'
-dataset_list = os.path.join(training_data_path, 'tumor_data_list_toy.txt')
+dataset_list = os.path.join(training_data_path, 'tumor_data_list.txt')
 
 training_data_path = args.data
 dataset_list = args.data_list

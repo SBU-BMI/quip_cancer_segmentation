@@ -67,7 +67,7 @@ for x in range(1, width, pw):
             pw_y = height - y;
         else:
             pw_y = pw;
-        
+
         if int(patch_size_40X * pw_x / pw) > 50 and int(patch_size_40X * pw_y / pw) > 50:
             corrs.append((x, y, pw_x, pw_y))
 
@@ -84,6 +84,7 @@ def extract_patch(corr):
     patch = patch.resize((int(patch_size_40X * pw_x / pw), int(patch_size_40X * pw_y / pw)), Image.ANTIALIAS);
     patch.save(fname);
 
+start = time.time()
 print(slide_name, len(corrs))
 pool = mp.Pool(processes=4)
 pool.map(extract_patch, corrs)

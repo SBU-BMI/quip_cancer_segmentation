@@ -25,7 +25,8 @@ The default settings are for Resnet-34 since it performs the best on the public 
 - Settings are stored in conf/variables.sh
 - Change DATA_PATH to your folder that contains all subfolders for training
 - Change DATA_LIST to your text file name that contains list of subfolders for training and validataion. 1st line is for validation, the rest is for training. Example of the list is tumor_data_list_toy.txt 
-- Run "bash train.sh" in folder "scripts"
+- Run a demo training that uses a subset of training data: python train_cancer_cnn_Resnet_pretrained.py  
+- To run a full training that uses all training data, remove line 107-111 in "train_cancer_cnn_Resnet_pretrained.py", then run python train_cancer_cnn_Resnet_pretrained.py
 - Log files are in data/log
 - Trained models are in "checkpoint"
 

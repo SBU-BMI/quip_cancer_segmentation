@@ -9,7 +9,8 @@ MONGODB_PORT=27017
 HEATMAP_VERSION=TIL-resnet
 
 # Base directory
-BASE_DIR=/gpfs/alpine/med108/proj-shared/hdle/quip_cancer_segmentation
+# BASE_DIR=/gpfs/alpine/med108/proj-shared/hdle/quip_cancer_segmentation
+BASE_DIR="$(dirname "$PWD")"        # auto detect base directory
 
 # The list of case_ids you want to download heaetmaps from
 CASE_LIST=${BASE_DIR}/data/raw_marking_to_download_case_list/case_list.txt

@@ -45,7 +45,7 @@ Create folder named "data" and subfoders below:
 - Settings are stored in conf/variables.sh
 - Change DATA_PATH to your folder that contains all subfolders for training
 - Change DATA_LIST to your text file name that contains list of subfolders for training and validataion. 1st line is for validation, the rest is for training. Example of the list is tumor_data_list_toy.txt 
-- Run "bash train.sh"
+- Run "bash train.sh" in folder "scripts"
 - Log files are in data/log
 - Trained models are in "checkpoint"
 

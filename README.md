@@ -35,15 +35,19 @@ The default settings are for Resnet-34 since it performs the best on the public 
 - Change MODEL in conf/variables.sh to your model name that is stored in data/models_cnn
 - Copy all .svs files to data/svs
   + For example, cd to your data/svs, run "cp /data01/shared/hanle/svs_tcga_seer_brca/TCGA-3C-AALI-01Z-00-DX2.svs ."
-#### Process .svs files:
-- Patch extraction: "nohup bash patch_extraction_cancer_40X/start.sh &"
-  + For demo, cd to your data/patches, run "cp -r /data10/shared/hanle/quip_cancer_segmentation/data/patches/TCGA-E2-A152-01Z-00-DX1.svs ." which is a completed extraction of a slide.
-- Prediction: ssh to computational node, run "nohup bash prediction/start.sh &"
-- Copy heatmap files: "nohup bash heatmap_gen/start.sh &"
-  + Output are in data/heatmap_txt
+#### Process .svs files (processing in computational nodes):
+- Patch extraction: go to folder "patch_extraction_cancer_40X", run "nohup bash start.sh &"
+- Prediction: go to folder "prediction", run "nohup bash start.sh &"
+- Generate json heatmap files: go to folder "heatmap_gen", run "nohup bash start.sh &"
+  + Output are in data/heatmap_txt and data/heatmap_jsons
+    
+#### 1 script to run all: 
+- To run all the above steps, including patch extraction, prediction, and generate json files, go to folder "scripts", run bash svs_2_heatmap.sh
+
 #### Generate Grayscale heatmap: 
-  + Run "bash download_heatmap/get_grayscale_heatmaps/start.sh"
+  + Go to folder "download_heatmap/get_grayscale_heatmaps", run "bash start.sh"
   + Results are stored at download_heatmap/get_grayscale_heatmaps/grayscale_heatmaps and data/grayscale_heatmaps
+
 #### Confirm the results:
   + Compare the grayscale heatmap with the one on website: [https://mathbiol.github.io/tcgatil/](https://mathbiol.github.io/tcgatil/)
 

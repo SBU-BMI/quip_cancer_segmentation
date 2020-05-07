@@ -7,26 +7,6 @@ NOTE: download the trained models [here](https://drive.google.com/open?id=1km7gV
 
 The default settings are for Resnet-34 since it performs the best on the public testset. To use other models, change the variable "MODEL" in conf/variables.sh to other models name downloaded from google drive above.
 
-# Docker Instructions 
-
-A Docker image is available at: [pytorch docker](https://cloud.docker.com/repository/docker/hanle/brca-pipeline-image)
-## Step 1:
-Create folder named "data" and subfoders below:
-
-- change the BASE_DIR setting in conf/variables.sh to the path of your working directory
-- data/svs: to contains *.svs files
-- data/training_data: to contain training data
-- data/patches: to contain output from patch extraction
-- data/log: to contain log files
-- data/heatmap_txt: to contain prediction output
-
-## Step 2:
-- Run "bash create_container.sh" to create container for the docker
-- Run "bash start_interactive_bash.sh" to start the docker workspace
-- Clone codes from this repository to workspace of docker.
-- run: "mv quip_cancer_segmentation/* ."
-- Follow instructions for Training and Testing as below.
-
 # Dependencies
 
  - [Pytorch 0.4.0](http://pytorch.org/)
@@ -65,6 +45,27 @@ Create folder named "data" and subfoders below:
   + Results are stored at download_heatmap/get_grayscale_heatmaps/grayscale_heatmaps and data/grayscale_heatmaps
 #### Confirm the results:
   + Compare the grayscale heatmap with the one on website: [https://mathbiol.github.io/tcgatil/](https://mathbiol.github.io/tcgatil/)
+
+
+# Docker Instructions 
+
+A Docker image is available at: [pytorch docker](https://cloud.docker.com/repository/docker/hanle/brca-pipeline-image)
+## Step 1:
+Create folder named "data" and subfoders below:
+
+- change the BASE_DIR setting in conf/variables.sh to the path of your working directory
+- data/svs: to contains *.svs files
+- data/training_data: to contain training data
+- data/patches: to contain output from patch extraction
+- data/log: to contain log files
+- data/heatmap_txt: to contain prediction output
+
+## Step 2:
+- Run "bash create_container.sh" to create container for the docker
+- Run "bash start_interactive_bash.sh" to start the docker workspace
+- Clone codes from this repository to workspace of docker.
+- run: "mv quip_cancer_segmentation/* ."
+- Follow instructions for Training and Testing as below.
 
 
 # Citation

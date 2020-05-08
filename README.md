@@ -21,6 +21,10 @@ The default settings are for Resnet-34 since it performs the best on the public 
 # Running Codes Instrucstions
 - Codes are in folder scripts, including training and testing
 - Need to setup folder path for training data, model. All parameters are found in conf/variables.sh
+
+## Setup conf/variables.sh
+- Change the BASE_DIR to the path of your folder after you clone the git repo
+
 ## Training:
 - Settings are stored in conf/variables.sh
 - Change DATA_PATH to your folder that contains all subfolders for training

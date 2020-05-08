@@ -9,8 +9,7 @@ MONGODB_PORT=27017
 HEATMAP_VERSION=cancer_BC_v2
 
 # Base directory
-# BASE_DIR=/data04/shared/hanle/quip_cancer_segmentation_vtr-pending
-BASE_DIR="$(dirname "$PWD")"        # auto detect base directory
+BASE_DIR=/data04/shared/hanle/quip_cancer_segmentation
 
 # The list of case_ids you want to download heaetmaps from
 CASE_LIST=${BASE_DIR}/data/raw_marking_to_download_case_list/case_list.txt

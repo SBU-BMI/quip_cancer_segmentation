@@ -8,7 +8,7 @@ import random
 import os
 import openslide
 from bson import json_util
-from pymongo import MongoClient
+#from pymongo import MongoClient
 
 is_shifted = False;
 
@@ -53,7 +53,7 @@ derived_mpp, avg_patch_width, avg_patch_height, pred_x_min, pred_x_max, pred_y_m
 # Load configs from ../conf/variables.sh
 mongo_host = 'localhost';
 mongo_port = 27017;
-cancer_type = 'quip';
+cancer_type = 'brca';
 lines = [line.rstrip('\n') for line in open('../conf/variables.sh')];
 for config_line in lines:
     if (config_line.startswith('MONGODB_HOST=')):
@@ -72,11 +72,6 @@ for config_line in lines:
         cancer_type = parts[1];
         slide_type = cancer_type;
         print("Cancer type ", cancer_type);
-
-    if (config_line.startswith('EXTERNAL_LYM_MODEL=')):
-        parts = config_line.split('=');
-        external_lym_model = parts[1];
-        print("If uses external model ", external_lym_model);
 
 n_heat = int((n_argv - start_id_multiheat) / 2);
 heat_list = [];
@@ -99,22 +94,15 @@ if not os.path.isfile(imgfilename):
     sys.exit(0);
 print("Doing {}".format(imgfilename));
 
-
-# Retrieve case_id and subject_id from mongodb
-# Read mongodb port
-
-#mongo_client = MongoClient(mongo_host, mongo_port);
-#db = mongo_client[cancer_type].images;
-#query_filename = imgfilename;
-#db_result = db.find_one({"filename":query_filename});
-#caseid = db_result['case_id'];
-#subjectid = db_result['subject_id'];
 caseid = casename.split('.')[0]
 subjectid = '-'.join(caseid.split('-')[0:3])
 
+out_dir = os.environ.get('OUT_DIR')
+if out_dir is None:
+   out_dir = "../data/output" 
 
-heatmapfile = './json/heatmap_' + filename.split('prediction-')[1] + '.json';
-metafile = './json/meta_' + filename.split('prediction-')[1] + '.json';
+heatmapfile = str(out_dir)+'/json/heatmap_' + filename.split('prediction-')[1] + '.json';
+metafile = str(out_dir)+'/json/meta_' + filename.split('prediction-')[1] + '.json';
 
 oslide = openslide.OpenSlide(imgfilename);
 slide_width_openslide = oslide.dimensions[0];
@@ -165,8 +153,7 @@ dict_img['case_id'] = caseid;
 dict_img['subject_id'] = subjectid;
 
 dict_analysis = {};
-dict_analysis['cancer_type'] = slide_type;
-dict_analysis['study_id'] = 'u24_tcga';
+dict_analysis['study_id'] = slide_type;
 dict_analysis['execution_id'] = heatmap_name;
 dict_analysis['source'] = 'computer';
 dict_analysis['computation'] = 'heatmap';
@@ -233,25 +220,23 @@ with open(metafile, 'w') as mf:
 
     dict_meta_provenance = {};
     dict_meta_provenance['analysis_execution_id'] = heatmap_name;
-    dict_meta_provenance['cancer_type'] = slide_type;
-    dict_meta_provenance['study_id'] = 'u24_tcga';
+    dict_meta_provenance['study_id'] = slide_type;
     dict_meta_provenance['type'] = 'computer';
-    dict_meta_provenance['external_lym_model'] = external_lym_model;
     dict_meta['provenance'] = dict_meta_provenance;
 
     dict_meta['submit_date'] = datetime.datetime.now();
     dict_meta['randval'] = random.uniform(0,1);
 
-    dict_meta_output_dims = {};
-    dict_meta_output_dims['derived_mpp'] = derived_mpp;
-    dict_meta_output_dims['slide_width'] = slide_width;
-    dict_meta_output_dims['slide_height'] = slide_height;
-    dict_meta_output_dims['avg_patch_width'] = avg_patch_width;
-    dict_meta_output_dims['avg_patch_height'] = avg_patch_height;
-    dict_meta_output_dims['pred_x_min'] = pred_x_min;
-    dict_meta_output_dims['pred_x_max'] = pred_x_max;
-    dict_meta_output_dims['pred_y_min'] = pred_y_min;
-    dict_meta_output_dims['pred_y_max'] = pred_y_max;
-    dict_meta['output_dims'] = dict_meta_output_dims;
+    # dict_meta_output_dims = {};
+    # dict_meta_output_dims['derived_mpp'] = derived_mpp;
+    # dict_meta_output_dims['slide_width'] = slide_width;
+    # dict_meta_output_dims['slide_height'] = slide_height;
+    # dict_meta_output_dims['avg_patch_width'] = avg_patch_width;
+    # dict_meta_output_dims['avg_patch_height'] = avg_patch_height;
+    # dict_meta_output_dims['pred_x_min'] = pred_x_min;
+    # dict_meta_output_dims['pred_x_max'] = pred_x_max;
+    # dict_meta_output_dims['pred_y_min'] = pred_y_min;
+    # dict_meta_output_dims['pred_y_max'] = pred_y_max;
+    # dict_meta['output_dims'] = dict_meta_output_dims;
 
     json.dump(dict_meta, mf, default=json_util.default);

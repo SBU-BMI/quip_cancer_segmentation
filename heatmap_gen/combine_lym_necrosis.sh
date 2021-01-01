@@ -4,10 +4,12 @@
 #   bash merge_lym_necrosis.sh ${FILE}
 #   ${FILE}: something like prediction-TCGA-44-2655-01Z-00-DX1.ee255271-780c-461c-ab23-5cd3504b5e4a
 
+source ../conf/variables.sh
+
 FN=$1
-LYM_FOLDER=./patch-level-lym/
-NEC_FOLDER=./patch-level-nec/
-OUT_FOLDER=./patch-level-merged/
+LYM_FOLDER=${OUT_DIR}/patch-level-lym/
+NEC_FOLDER=${OUT_DIR}/patch-level-nec/
+OUT_FOLDER=${OUT_DIR}/patch-level-merged/
 
 awk 'NR==FNR{
     x=$1;
@@ -64,6 +66,6 @@ NR!=FNR{
         necrosis = 0;
     }
     print $1, $2, lym, necrosis;
-}' ./${NEC_FOLDER}/${FN} ./${LYM_FOLDER}/${1} > ${OUT_FOLDER}/${FN}
+}' ${NEC_FOLDER}/${FN} ${LYM_FOLDER}/${1} > ${OUT_FOLDER}/${FN} 2>&1
 
 exit 0

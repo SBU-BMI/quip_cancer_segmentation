@@ -19,6 +19,11 @@ From: pytorch/pytorch:1.0.1-cuda10.0-cudnn7-devel
 	conda install --yes -c conda-forge opencv
 	pip install openslide-python
 	chmod 0755 /root/quip_cancer_segmentation/scripts/*
+	cd /root/quip_cancer_segmentation/models_cnn 
+	wget --no-check-certificate -v -O models.zip -L \
+		https://stonybrookmedicine.box.com/shared/static/1hdfb06lgd08xfbpoly9tjp6c6i665nz.zip >/dev/null 2>&1 
+        unzip -o models.zip && rm -f models.zip && mv brca_models_cnn/* . && rm -rf brca_models_cnn 
+	chmod 0755 /root/quip_cancer_segmentation/scripts/*
 
 %environment
 	export BASE_DIR="/root/quip_cancer_segmentation"

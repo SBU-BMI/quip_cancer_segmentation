@@ -27,7 +27,6 @@ TileFolder = sys.argv[1] + '/';
 
 BatchSize = 96;
 
-#CNNModel = sys.argv[2] + '/cnn_lym_model.pkl';
 heat_map_out = sys.argv[3];
 old_model = sys.argv[4]
 

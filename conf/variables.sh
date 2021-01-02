@@ -13,7 +13,7 @@ fi
 
 # Base directory
 export BASE_DIR=/root/quip_cancer_segmentation
-export DATA_DIR=${BASE_DIR}/data
+export DATA_DIR=/data
 export OUT_DIR=${DATA_DIR}/output
 
 # Prediction folders

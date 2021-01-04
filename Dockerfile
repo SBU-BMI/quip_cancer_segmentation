@@ -14,7 +14,7 @@ RUN	apt-get -y update && \
 	conda install --yes -c conda-forge opencv && \
 	pip install openslide-python
 
-ENV     BASE_DIR="/root/quip_cancer_segmentation"
+ENV     BASE_DIR="/quip_app/quip_cancer_segmentation"
 ENV     PATH="./":$PATH
 
 COPY	. ${BASE_DIR}/.

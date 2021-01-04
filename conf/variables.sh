@@ -12,7 +12,7 @@ if [[ -z "${HEATMAP_VERSION}" ]]; then
 fi
 
 # Base directory
-export BASE_DIR=/root/quip_cancer_segmentation
+export BASE_DIR=/quip_app/quip_cancer_segmentation
 export DATA_DIR=/data
 export OUT_DIR=${DATA_DIR}/output
 

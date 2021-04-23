@@ -26,11 +26,12 @@ PS = 200
 TileFolder = sys.argv[1] + '/';
 slide_id = sys.argv[1].split('/')[-1]
 
-BatchSize = 128*6;
+BatchSize = 96 # 128*6;
 
 #CNNModel = sys.argv[2] + '/cnn_lym_model.pkl';
 heat_map_out = sys.argv[3];
 old_model = sys.argv[4]
+
 print('Start predicting slide: ', TileFolder)
 sys.stdout.flush()
 
@@ -241,7 +242,7 @@ print("{}- | Load pretrained at  {}...".format(slide_id, old_model))
 checkpoint = torch.load(old_model, map_location=lambda storage, loc: storage)
 model = checkpoint['model']
 model = unparallelize_model(model)
-model = parallelize_model(model)
+# model = parallelize_model(model)
 
 model.to(device)
 model.train(False)

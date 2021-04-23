@@ -54,6 +54,7 @@ derived_mpp, avg_patch_width, avg_patch_height, pred_x_min, pred_x_max, pred_y_m
 mongo_host = 'localhost';
 mongo_port = 27017;
 cancer_type = 'quip';
+slide_type = "brca";
 lines = [line.rstrip('\n') for line in open('../conf/variables.sh')];
 for config_line in lines:
     if (config_line.startswith('MONGODB_HOST=')):

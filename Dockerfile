@@ -3,7 +3,7 @@ MAINTAINER Tahsin Kurc
 
 RUN	apt-get -y update && \
 	apt-get install --yes python3-openslide wget zip libgl1-mesa-glx libgl1-mesa-dev && \
-	pip install --upgrade pip && \
+	pip install --upgrade pip==21.0.1 && \
 	conda update -n base -c defaults conda && \
 	pip3 install setuptools==45 && \
 	pip install cython && \

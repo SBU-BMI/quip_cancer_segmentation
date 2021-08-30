@@ -6,7 +6,7 @@ From: pytorch/pytorch:1.0.1-cuda10.0-cudnn7-devel
 
 %post
 	apt-get -y update 
-	apt-get install --yes python3-openslide wget zip libgl1-mesa-glx libgl1-mesa-dev 
+	apt-get install --yes python3-openslide wget zip libgl1-mesa-glx libgl1-mesa-dev git
 	export PATH="/opt/conda/bin:/usr/local/bin:./":$PATH
 	pip install --upgrade pip==21.0.1
 	conda update -n base -c defaults conda 
@@ -28,6 +28,8 @@ From: pytorch/pytorch:1.0.1-cuda10.0-cudnn7-devel
 %environment
 	export BASE_DIR="/quip_app/quip_cancer_segmentation"
 	export PATH="/opt/conda/bin:/usr/local/bin:./":$PATH
+	export MODEL_URL="https://stonybrookmedicine.box.com/shared/static/1hdfb06lgd08xfbpoly9tjp6c6i665nz.zip"
+	export MODEL_VER="v1.0"
 
 %runscript
 	cd ${BASE_DIR}/scripts

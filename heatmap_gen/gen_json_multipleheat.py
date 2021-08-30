@@ -152,12 +152,23 @@ dict_img = {};
 dict_img['case_id'] = caseid;
 dict_img['subject_id'] = subjectid;
 
+analysis_execution_date = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+
 dict_analysis = {};
 dict_analysis['study_id'] = slide_type;
 dict_analysis['execution_id'] = heatmap_name;
 dict_analysis['source'] = 'computer';
 dict_analysis['computation'] = 'heatmap';
+dict_analysis['execution_date'] = analysis_execution_date
 
+dict_version = {};
+dict_version['git_remote'] = os.environ.get('GIT_REMOTE')
+dict_version['git_branch'] = os.environ.get('GIT_BRANCH')
+dict_version['git_commit'] = os.environ.get('GIT_COMMIT')
+dict_version['model_path'] = os.environ.get('MODEL_PATH')
+dict_version['model_hash'] = os.environ.get('MODEL_HASH')
+dict_version['model_url']  = os.environ.get('MODEL_URL')
+dict_version['model_ver']  = os.environ.get('MODEL_VER')
 
 if (is_shifted == True):
     shifted_x = -3*patch_width / 4.0;
@@ -205,6 +216,7 @@ with open(heatmapfile, 'w') as f:
         dict_provenance = {};
         dict_provenance['image'] = dict_img;
         dict_provenance['analysis'] = dict_analysis;
+        dict_provenance['version'] = dict_version;
         dict_patch['provenance'] = dict_provenance;
 
         dict_patch['date'] = datetime.datetime.now();
@@ -220,8 +232,10 @@ with open(metafile, 'w') as mf:
 
     dict_meta_provenance = {};
     dict_meta_provenance['analysis_execution_id'] = heatmap_name;
+    dict_meta_provenance['analysis_execution_date'] = analysis_execution_date;
     dict_meta_provenance['study_id'] = slide_type;
     dict_meta_provenance['type'] = 'computer';
+    dict_meta_provenance['version'] = dict_version;
     dict_meta['provenance'] = dict_meta_provenance;
 
     dict_meta['submit_date'] = datetime.datetime.now();

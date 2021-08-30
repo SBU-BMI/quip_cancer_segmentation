@@ -41,6 +41,15 @@ else
 fi
 export MODEL
 
+# VERSION INFO
+export MODEL_PATH=$LYM_NECRO_CNN_MODEL_PATH/$MODEL 
+export TUMOR_VERSION=$(git show --oneline -s | cut -f 1 -d ' ')":"$MODEL_VER":"$(sha256sum $MODEL_PATH | cut -c1-7)
+export HEATMAP_VERSION=$HEATMAP_VERSION":"$TUMOR_VERSION
+export GIT_REMOTE=$(git remote -v | head -n 1 | cut -f 1 -d ' '| cut -f 2)
+export GIT_BRANCH=$(git branch | grep "\*" | cut -f 2 -d ' ')
+export GIT_COMMIT=$(git show | head -n 1 | cut -f 2 -d ' ')
+export MODEL_HASH=$(sha256sum $MODEL_PATH | cut -f 1 -d ' ')
+
 # Training folders
 # The list of case_ids you want to download heaetmaps from
 export CASE_LIST=${DATA_DIR}/raw_marking_to_download_case_list/case_list.txt

@@ -44,7 +44,6 @@ export MODEL
 # VERSION INFO
 export MODEL_PATH=$LYM_NECRO_CNN_MODEL_PATH/$MODEL 
 export TUMOR_VERSION=$(git show --oneline -s | cut -f 1 -d ' ')":"$MODEL_VER":"$(sha256sum $MODEL_PATH | cut -c1-7)
-export HEATMAP_VERSION=$HEATMAP_VERSION":"$TUMOR_VERSION
 export GIT_REMOTE=$(git remote -v | head -n 1 | cut -f 1 -d ' '| cut -f 2)
 export GIT_BRANCH=$(git branch | grep "\*" | cut -f 2 -d ' ')
 export GIT_COMMIT=$(git show | head -n 1 | cut -f 2 -d ' ')

@@ -2,7 +2,7 @@ BootStrap: docker
 From: pytorch/pytorch:1.0.1-cuda10.0-cudnn7-devel 
 
 %files
-	../* /quip_app/quip_cancer_segmentation/
+	../ /quip_app/quip_cancer_segmentation/
 
 %post
 	apt-get -y update 

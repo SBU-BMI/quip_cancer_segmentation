@@ -3,7 +3,7 @@
 This repo is for training and testing brca cancer detection pipeline using 3 standard CNNs: VGG16, Resnet-34, and Inception-v4. 
 More details are found in the paper: [Utilizing Automated Breast Cancer Detection to Identify Spatial Distributions of Tumor Infiltrating Lymphocytes in Invasive Breast Cancer](https://arxiv.org/abs/1905.10841)
 
-NOTE: download the trained models [here](https://drive.google.com/open?id=1km7gVpBpLbBovExTgt3CE8JRwpTEl57F), extract 3 *.t7  files to data/models_cnn
+NOTE: download the trained models [here](https://stonybrookmedicine.box.com/shared/static/1hdfb06lgd08xfbpoly9tjp6c6i665nz.zip), extract the model files to data/models_cnn
 
 The default settings are for Resnet-34 since it performs the best on the public testset. To use other models, change the variable "MODEL" in conf/variables.sh to other models name downloaded from google drive above.
 
